@@ -1,0 +1,103 @@
+import { createRouter, createWebHistory } from "vue-router";
+
+const router = createRouter({
+  history: createWebHistory(import.meta.env.BASE_URL),
+
+  routes: [
+    // Login
+    {
+      path: "/",
+      name: "login",
+      component: () => import("@/features/auth/LoginView.vue"),
+    },
+
+    // Home
+    {
+      path: "/home",
+      name: "home",
+      component: () => import("@/features/home/HomeView.vue"),
+    },
+
+    // Search
+    {
+      path: "/search",
+      name: "search",
+      component: () => import("@/features/search/SearchView.vue"),
+    },
+
+    // Playlists
+    {
+      path: "/playlists",
+      name: "playlists",
+      component: () => import("@/features/playlists/PlaylistsView.vue"),
+    },
+
+    // Single Playlist 
+    {
+      path: "/playlists/:id",
+      name: "playlist",
+      component: () => import("@/features/playlists/SinglePlaylistView.vue"),
+      props: true,
+    },
+
+    // Artists
+    {
+      path: "/artists/:id",
+      name: "artist",
+      component: () => import("@/features/catalog/ArtistView.vue"),
+      props: true,
+    },
+
+    // Albums
+    {
+      path: "/albums/:id",
+      name: "album",
+      component: () => import("@/features/catalog/AlbumView.vue"),
+      props: true,
+    },
+
+    // Discover
+    {
+      path: "/discover",
+      name: "discover",
+      component: () => import("@/features/discover/DiscoverView.vue"),
+    },
+    
+    // Genre Playlists
+    {
+      path: "/discover/:genre",
+      name: "genre",
+      component: () => import("@/features/discover/GenreView.vue"),
+      props: true,
+    },
+
+    // Favorites
+    {
+      path: "/favorites",
+      name: "favorites",
+      component: () => import("@/features/favorites/FavoritesView.vue"),
+    },
+
+    // Recently Played
+    {
+      path: "/recently-played",
+      name: "recently-played",
+      component: () => import("@/features/recently-played/RecentlyPlayedView.vue"),
+    },
+
+    // Spotify Callback
+    {
+      path: "/callback",
+      name: "callback",
+      component: () => import("@/features/auth/CallbackView.vue"),
+    },
+
+    // Not Found
+    {
+      path: "/:pathMatch(.*)*",
+      redirect: "/home",
+    },
+  ],
+});
+
+export default router;
