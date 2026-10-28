@@ -120,12 +120,25 @@ router.beforeEach(async (to) => {
     // Verify Active Appwrite Session
     await account.get();
     return true;
-  } catch {
-    // Redirect Unauthenticated Users to Login
-    return {
-      name: "login",
-      query: { redirect: to.fullPath },
-    };
+  } catch (error: unknown) {
+    // Redirect Only When the Session Is Invalid
+    const status =
+      typeof error === "object" &&
+      error !== null &&
+      "code" in error
+        ? (error as { code?: number }).code
+        : undefined;
+
+    if (status === 401) {
+      return {
+        name: "login",
+        query: { redirect: to.fullPath },
+      };
+    }
+
+    // Keep the Current Page on Network or Server Errors
+    console.error("Failed to verify Appwrite session:", error);
+    return false;
   }
 });
 
