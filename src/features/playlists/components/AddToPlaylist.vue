@@ -187,7 +187,7 @@ const openNewPlaylist = () => {
 };
 
 // Adds the track to the selected playlist
-const addToPlaylist = () => {
+const addToPlaylist = async () => {
   if (!selectedPlaylistId.value) return;
 
   const playlist = playlists.value.find(
@@ -199,24 +199,28 @@ const addToPlaylist = () => {
     return;
   }
 
-  const added = addTrackToPlaylist(
-    playlist.id,
-    props.track
-  );
+  try {
+    const added = await addTrackToPlaylist(
+      playlist.id,
+      props.track
+    );
 
-  if (!added) {
-    console.error("Track could not be added.");
-    return;
+    if (!added) {
+      console.error("Track could not be added.");
+      return;
+    }
+
+    triggerToast({
+      type: "track",
+      action: "added",
+      trackName: props.track.title,
+      playlistName: playlist.name,
+    });
+
+    closeModal();
+  } catch (error) {
+    console.error("Failed to add track to playlist:", error);
   }
-
-  triggerToast({
-    type: "track",
-    action: "added",
-    trackName: props.track.title,
-    playlistName: playlist.name,
-  });
-
-  closeModal();
 };
 
 // Formats track duration
