@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted } from "vue";
+import { computed, onMounted, watch } from "vue";
 import { useRoute } from "vue-router";
 import AsideNav from "@/components/layout/AsideNav.vue";
 import NavBar from "@/components/layout/NavBar.vue";
@@ -27,7 +27,7 @@ const restoreUserData = async () => {
     // Verify Active Appwrite Session
     await account.get();
 
-    // Restore Favorites and Playlists
+    // Restore Favorites and Playlists Without Blocking the UI
     const results = await Promise.allSettled([
       loadFavorites(),
       loadPlaylists(),
@@ -35,20 +35,30 @@ const restoreUserData = async () => {
 
     results.forEach((result) => {
       if (result.status === "rejected") {
-        console.error("Failed to restore user data:", result.reason);
+        console.error(
+          "Failed to restore user data:",
+          result.reason
+        );
       }
     });
-  } catch {
-    // No Active Session - Login Will Handle Authentication
+  } catch (error) {
+    console.error("Failed to initialize user data:", error);
   }
 };
 
-onMounted(() => {
-  // Restore Saved Data When App Starts
-  if (!isAuthPage.value) {
-    void restoreUserData();
-  }
+// Restore User Data When Main App Becomes Active
+watch(
+  isAuthPage,
+  (authPage) => {
+    if (!authPage) {
+      void restoreUserData();
+    }
+  },
+  { immediate: true }
+);
 
+// Initialize Spotify Player Events
+onMounted(() => {
   // Handle Spotify Track Ending
   onSpotifyTrackEnd(() => {
     nextTrack().catch((error) => {
@@ -66,7 +76,7 @@ useScrollToTop();
   <RouterView v-if="isAuthPage" />
 
   <!-- Main Purrify App -->
-  <div v-else  data-scroll-container class="min-h-screen flex-1 overflow-y-auto bg-[#fcd5d7]" :class="currentTrack ? 'pb-28 md:pb-24 xl:pb-32' : 'pb-0'">
+  <div v-else data-scroll-container class="min-h-screen flex-1 overflow-y-auto bg-[#fcd5d7]" :class="currentTrack ? 'pb-28 md:pb-24 xl:pb-32' : 'pb-0'">
     <AsideNav />
 
     <div class="transition-all duration-300 md:ml-24 lg:ml-64">

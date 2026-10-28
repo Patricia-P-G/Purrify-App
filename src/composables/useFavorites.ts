@@ -1,3 +1,4 @@
+
 import { ref } from "vue";
 import type { Track } from "@/types/music";
 import {
@@ -74,10 +75,12 @@ export function useFavorites() {
       return loadingPromise;
     }
 
-    // Ignore Previously Loaded Favorites From Another User
+    // Reset Only When Switching Between Users
     if (
-      initializedUserId !== userId ||
-      (loadingUserId !== null && loadingUserId !== userId)
+      (initializedUserId !== null &&
+        initializedUserId !== userId) ||
+      (loadingUserId !== null &&
+        loadingUserId !== userId)
     ) {
       requestVersion++;
       clearFavoritesState();
@@ -91,8 +94,9 @@ export function useFavorites() {
 
     const currentVersion = requestVersion;
 
-    const isCurrentRequest = () =>
-      currentVersion === requestVersion;
+    const isCurrentRequest = () => {
+      return currentVersion === requestVersion;
+    };
 
     loadingUserId = userId;
     isLoading.value = true;
@@ -154,7 +158,9 @@ export function useFavorites() {
             if (!isCurrentRequest()) return;
 
             for (const track of tracks) {
-              if (!favoriteIds.value.includes(track.id)) continue;
+              if (!favoriteIds.value.includes(track.id)) {
+                continue;
+              }
 
               restoredTracks.set(track.id, track);
             }
@@ -236,15 +242,17 @@ export function useFavorites() {
 
       // Update UI Immediately
       favoriteIds.value = [
-        ...favoriteIds.value,
         track.id,
+        ...favoriteIds.value.filter(
+          (id) => id !== track.id
+        ),
       ];
 
       favoriteTracks.value = [
+        track,
         ...favoriteTracks.value.filter(
           (item) => item.id !== track.id
         ),
-        track,
       ];
 
       try {
@@ -291,6 +299,8 @@ export function useFavorites() {
         (track) => track.id === trackId
       );
 
+      const previousIdIndex = favoriteIds.value.indexOf(trackId);
+
       // Update UI Immediately
       favoriteIds.value = favoriteIds.value.filter(
         (id) => id !== trackId
@@ -306,10 +316,15 @@ export function useFavorites() {
       } catch (error) {
         // Roll Back If Deleting Fails
         if (currentVersion === requestVersion) {
-          favoriteIds.value = [
-            ...favoriteIds.value,
-            trackId,
-          ];
+          const restoredIds = [...favoriteIds.value];
+
+          restoredIds.splice(
+            Math.max(previousIdIndex, 0),
+            0,
+            trackId
+          );
+
+          favoriteIds.value = restoredIds;
 
           if (previousTrack) {
             const restored = [...favoriteTracks.value];
