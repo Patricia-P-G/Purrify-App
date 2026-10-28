@@ -1,4 +1,5 @@
 import type { Track } from "@/types/music";
+import { pickImage } from "@/services/spotify/images";
 
 export interface SpotifyTrack {
   id: string;
@@ -31,8 +32,8 @@ export function mapSpotifyTrack(track: SpotifyTrack): Track {
     })),
     album: track.album.name,
     albumId: track.album.id,
-    image: track.album.images.at(-1)?.url ?? "",
-    largeImage: track.album.images[0]?.url ?? "",
+    image: pickImage(track.album.images, "small"),
+    largeImage: pickImage(track.album.images, "large"),
     duration: track.duration_ms,
   };
 }

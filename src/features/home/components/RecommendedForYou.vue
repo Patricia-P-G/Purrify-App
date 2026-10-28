@@ -51,16 +51,7 @@
     </div>
 
     <!-- Error State -->
-    <div v-else-if="errorMessage" class="py-6 text-center" role="alert">
-      <p class="mb-4 text-sm text-text-secondary">
-        {{ errorMessage }}
-      </p>
-
-      <button type="button" class="btn-base btn-sm border border-primary bg-primary-pale text-primary hover:bg-primary-light"
-        @click="loadRecommendations">
-        Try again
-      </button>
-    </div>
+    <ErrorState v-else-if="errorMessage" :message="errorMessage" @retry="loadRecommendations" />
 
     <!-- Recommended Songs -->
     <TrackList v-else-if="recommendedSongs.length" :tracks="recommendedSongs" list-label="Recommended songs" heading-id="recommended-track-list-heading"
@@ -93,6 +84,7 @@
 
 <script setup lang="ts">
 import { computed, onMounted, ref } from "vue";
+import ErrorState from "@/components/ui/ErrorState.vue";
 import { getRecommendedSongs } from "@/services/spotify/api/recommendedForYou";
 import { usePlayer } from "@/composables/usePlayer";
 import { useFavoriteActions } from "@/composables/useFavoritesActions";

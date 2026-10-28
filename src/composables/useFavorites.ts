@@ -1,4 +1,3 @@
-
 import { ref } from "vue";
 import type { Track } from "@/types/music";
 import {
@@ -8,7 +7,8 @@ import {
   removeFavorite as removeAppwriteFavorite,
 } from "@/services/appwrite/favorites";
 import { getTracksByIds } from "@/services/spotify/api/tracks";
-import { account } from "@/services/appwrite/client";
+import { orderTracks, restoreSavedTracks } from "@/utils/favoriteTracks";
+import { getCurrentUser } from "@/services/appwrite/session";
 
 const favoriteTracks = ref<Track[]>([]);
 const favoriteIds = ref<string[]>([]);
@@ -22,19 +22,6 @@ let requestVersion = 0;
 const pendingTracks = new Set<string>();
 
 // --------------------------------------------------- Favorites ---------------------------------------------------
-
-// Check Whether Saved Track Has Complete Display Data
-const hasCompleteTrackData = (track: Track): boolean => {
-  return Boolean(
-    track.id &&
-    track.title &&
-    track.artist &&
-    track.image &&
-    track.album &&
-    track.duration > 0 &&
-    track.uri
-  );
-};
 
 // Clear Local Favorites
 const clearFavoritesState = () => {
@@ -62,7 +49,7 @@ export function useFavorites() {
     let user;
 
     try {
-      user = await account.get();
+      user = await getCurrentUser();
     } catch (error) {
       resetFavorites();
       throw error;
@@ -108,45 +95,15 @@ export function useFavorites() {
 
         if (!isCurrentRequest()) return;
 
-        const restoredTracks = new Map<string, Track>();
-        const missingIds: string[] = [];
-
         // Restore Original Track Objects
-        for (const favorite of favorites) {
-          if (favorite.trackData) {
-            try {
-              const track = JSON.parse(
-                favorite.trackData
-              ) as Track;
-
-              if (
-                track.id === favorite.trackId &&
-                hasCompleteTrackData(track)
-              ) {
-                restoredTracks.set(track.id, track);
-                continue;
-              }
-            } catch (error) {
-              console.error(
-                "Invalid favorite track data:",
-                error
-              );
-            }
-          }
-
-          missingIds.push(favorite.trackId);
-        }
+        const { restored: restoredTracks, missingIds } = restoreSavedTracks(favorites);
 
         // Restore Favorite IDs And Complete Songs
         favoriteIds.value = favorites.map(
           (favorite) => favorite.trackId
         );
 
-        favoriteTracks.value = favorites
-          .map((favorite) =>
-            restoredTracks.get(favorite.trackId)
-          )
-          .filter((track): track is Track => Boolean(track));
+        favoriteTracks.value = orderTracks(favorites, restoredTracks);
 
         initializedUserId = userId;
 
@@ -166,11 +123,7 @@ export function useFavorites() {
             }
 
             // Preserve Favorites Order
-            favoriteTracks.value = favorites
-              .map((favorite) =>
-                restoredTracks.get(favorite.trackId)
-              )
-              .filter((track): track is Track => Boolean(track));
+            favoriteTracks.value = orderTracks(favorites, restoredTracks);
 
             // Save Recovered Tracks For Future Refreshes
             const results = await Promise.allSettled(

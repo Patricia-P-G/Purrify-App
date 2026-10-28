@@ -1,5 +1,6 @@
 import { account, client } from "./client";
-import { AppwriteException, Functions } from "appwrite";
+import { Functions } from "appwrite";
+import { getCurrentUser, isUnauthorized } from "./session";
 
 const functions = new Functions(client);
 
@@ -25,7 +26,7 @@ export const loginWithAppwrite = async (accessToken: string) => {
 
   // Check Existing Appwrite Session
   try {
-    const currentUser = await account.get();
+    const currentUser = await getCurrentUser();
 
     // Reuse the Session If It Belongs to the Same User
     if (currentUser.$id === userId) {
@@ -38,10 +39,7 @@ export const loginWithAppwrite = async (accessToken: string) => {
     });
   } catch (error) {
     // Continue Only If No Active Session Exists
-    if (
-      !(error instanceof AppwriteException) ||
-      error.code !== 401
-    ) {
+    if (!isUnauthorized(error)) {
       throw error;
     }
   }

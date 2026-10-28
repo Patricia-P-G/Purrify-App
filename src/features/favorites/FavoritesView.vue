@@ -42,7 +42,7 @@
 
     <!-- Favorite Tracks -->
     <TrackList v-else-if="filteredTracks.length" :tracks="filteredTracks" list-label="Favorite songs" heading-id="favorites-track-list-heading"
-      :current-track-id="currentTrack?.id" :current-track-index="currentIndex" :is-playing="isPlaying" :open-menu="openMenu"
+      :current-track-id="activeTrackId" :current-track-index="activeTrackIndex" :is-playing="isPlaying" :open-menu="openMenu"
       :is-favorite="isFavorite" @track-click="handleTrackClick" @favorite-click="handleFavoriteClick" @menu-click="toggleMenu"
     />
 
@@ -69,6 +69,10 @@
       </p>
     </section>
 
+    <p v-if="playbackMessage" class="sr-only" role="status" aria-live="polite" aria-atomic="true">
+      {{ playbackMessage }}
+    </p>
+
     <!-- Action Toast -->
     <ActionToast :show="showToast" :type="toastType" :action="toastAction" :track-name="toastTrackName" :playlist-name="toastPlaylistName"
       @close="closeToast"
@@ -77,44 +81,35 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref } from "vue";
+import { onMounted, ref } from "vue";
 import { useHead } from "@unhead/vue";
-import { usePlayer } from "@/composables/usePlayer";
 import { useFavorites } from "@/composables/useFavorites";
-import { useFavoriteActions } from "@/composables/useFavoritesActions";
-import { useActionToast } from "@/composables/useActionToast";
+import { useTrackListView } from "@/composables/useTrackListView";
 import MusicHeroLayout from "@/components/music/MusicHeroLayout.vue";
 import PlayAllButton from "@/components/ui/PlayAllButton.vue";
 import SearchBar from "@/components/ui/SearchBar.vue";
 import TrackList from "@/components/music/TrackList.vue";
 import ActionToast from "@/components/ui/ActionToast.vue";
-import type { Track } from "@/types/music";
-
-// Search State
-const searchQuery = ref("");
-
-// Track Menu
-const openMenu = ref<number | null>(null);
-
-// Error State
-const loadError = ref(false);
-
-// Player
-const { currentTrack, currentIndex, isPlaying, playTracks, togglePlay } = usePlayer();
 
 // Favorites
 const { favoriteTracks, loadFavorites, isLoading } = useFavorites();
+const loadError = ref(false);
 
-// Favorite Actions
-const { isFavorite, handleFavoriteClick } = useFavoriteActions();
-
-// Action Toast
-const { showToast, toastType, toastAction, toastTrackName, toastPlaylistName, closeToast } = useActionToast();
+// Shared list behavior (search, playback, menu, favorites, toast)
+const {
+  searchQuery, searchStatus, filteredTracks, openMenu, toggleMenu,
+  isPlaying, activeTrackId, activeTrackIndex, playbackMessage, handleTrackClick, playAll,
+  isFavorite, handleFavoriteClick,
+  showToast, toastType, toastAction, toastTrackName, toastPlaylistName, closeToast
+} = useTrackListView(favoriteTracks, {
+  label: "favorite songs",
+  source: () => ({ type: "favorites" }),
+  paginate: false,
+});
 
 // Page SEO
 useHead({
   title: "Favorite Songs | Purrify",
-
   meta: [
     {
       name: "description",
@@ -122,57 +117,6 @@ useHead({
     },
   ],
 });
-
-// Filter Favorite Tracks
-const filteredTracks = computed(() => {
-  const query = searchQuery.value.toLowerCase().trim();
-
-  if (!query) return favoriteTracks.value;
-
-  return favoriteTracks.value.filter((track) =>
-    track.title.toLowerCase().includes(query) ||
-    track.artist.toLowerCase().includes(query) ||
-    track.album?.toLowerCase().includes(query)
-  );
-});
-
-// Search Accessibility
-const searchStatus = computed(() => {
-  const query = searchQuery.value.trim();
-
-  if (isLoading.value) return "Loading favorite songs";
-  if (loadError.value) return "Could not load favorite songs";
-
-  if (!query) return `${favoriteTracks.value.length} favorite songs available`;
-  if (!filteredTracks.value.length) return `No songs found for ${query}`;
-
-  return `${filteredTracks.value.length} songs found for ${query}`;
-});
-
-// Handle Track Click
-const handleTrackClick = (track: Track, index: number) => {
-  if (
-    currentTrack.value?.id === track.id &&
-    currentIndex.value === index
-  ) {
-    togglePlay();
-    return;
-  }
-
-  playTracks(filteredTracks.value, index);
-};
-
-// Toggle Track Menu
-const toggleMenu = (index: number) => {
-  openMenu.value = openMenu.value === index ? null : index;
-};
-
-// Play All Favorites
-const playAll = () => {
-  if (!filteredTracks.value.length) return;
-
-  playTracks(filteredTracks.value, 0);
-};
 
 // Load Favorites
 onMounted(async () => {

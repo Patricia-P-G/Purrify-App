@@ -9,7 +9,7 @@ import { usePlayer } from "@/composables/usePlayer";
 import { useScrollToTop } from "@/composables/useScrollToTop";
 import { useFavorites } from "@/composables/useFavorites";
 import { usePlaylists } from "@/composables/usePlaylists";
-import { account } from "@/services/appwrite/client";
+import { getCurrentUser } from "@/services/appwrite/session";
 
 const route = useRoute();
 const { nextTrack, currentTrack } = usePlayer();
@@ -25,7 +25,7 @@ const isAuthPage = computed(() => {
 const restoreUserData = async () => {
   try {
     // Verify Active Appwrite Session
-    await account.get();
+    await getCurrentUser();
 
     // Restore Favorites and Playlists Without Blocking the UI
     const results = await Promise.allSettled([

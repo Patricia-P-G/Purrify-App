@@ -1,5 +1,6 @@
 import { spotifyFetch } from "@/services/spotify/api/spotifyClient";
 import { mapSpotifyTrack, type SpotifyTrack } from "@/services/spotify/spotifyTrackMapper";
+import { pickImage } from "@/services/spotify/images";
 import type { RecentlyPlayedTrack } from "@/types/music";
 
 interface SpotifyRecentlyPlayedItem {
@@ -19,10 +20,7 @@ export async function getRecentlyPlayed(limit = 50): Promise<RecentlyPlayedTrack
         id: artist.id,
         name: artist.name,
       })),
-      largeImage:
-        item.track.album.images[1]?.url ??
-        item.track.album.images[0]?.url ??
-        "",
+      largeImage: pickImage(item.track.album.images, "medium"),
       playedAt: item.played_at,
     }));
 }

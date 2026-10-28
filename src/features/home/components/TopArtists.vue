@@ -1,7 +1,6 @@
 <template>
   <!-- Top Artists Section -->
-  <section class="section-card"
-    aria-labelledby="top-artists-heading" :aria-busy="isLoading">
+  <section class="section-card" aria-labelledby="top-artists-heading" :aria-busy="isLoading">
 
     <!-- Header -->
     <div class="section-card-header">
@@ -38,16 +37,7 @@
     </div>
 
     <!-- Error State -->
-    <div v-else-if="loadError" class="py-6 text-center" role="alert">
-      <p class="text-sm text-text-secondary">
-        {{ loadError }}
-      </p>
-
-      <button type="button" class="btn-base btn-sm mt-3 border border-primary bg-primary-pale text-primary hover:bg-primary-light"
-        @click="loadTopArtists">
-        Try again
-      </button>
-    </div>
+    <ErrorState v-else-if="loadError" :message="loadError" @retry="loadTopArtists" />
 
     <!-- Artists -->
     <ul v-else-if="topArtists.length" class="flex flex-col gap-2" aria-label="Your top Spotify artists">
@@ -112,6 +102,7 @@
 
 <script setup lang="ts">
 import { onMounted, ref } from "vue";
+import ErrorState from "@/components/ui/ErrorState.vue";
 import { getTopArtists } from "@/services/spotify/api/topArtists";
 import type { Artist } from "@/types/music";
 

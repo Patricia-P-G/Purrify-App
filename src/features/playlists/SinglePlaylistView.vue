@@ -29,8 +29,8 @@
     </div>
 
     <!-- Track List -->
-    <TrackList v-else :tracks="visibleTracks" list-label="Playlist songs" heading-id="playlist-songs-heading" :current-track-id="currentTrack?.id"
-      :current-track-index="currentIndex" :is-playing="isPlaying" :open-menu="openMenu" :is-favorite="isFavorite"
+    <TrackList v-else :tracks="visibleTracks" list-label="Playlist songs" heading-id="playlist-songs-heading" :current-track-id="activeTrackId"
+      :current-track-index="activeTrackIndex" :is-playing="isPlaying" :open-menu="openMenu" :is-favorite="isFavorite"
       :allow-remove-from-playlist="!isSpotifyPlaylist" @track-click="handleTrackClick" @favorite-click="handleFavoriteClick"
       @menu-click="toggleMenu" @remove-from-playlist="handleRemoveTrack">
 
@@ -52,6 +52,10 @@
 
     <p class="sr-only" role="status" aria-live="polite" aria-atomic="true">
       {{ loadingAnnouncement }}
+    </p>
+
+    <p v-if="playbackMessage" class="sr-only" role="status" aria-live="polite" aria-atomic="true">
+      {{ playbackMessage }}
     </p>
 
     <!-- Edit Playlist -->
@@ -120,11 +124,8 @@ import ActionToast from "@/components/ui/ActionToast.vue";
 import EditPlaylist from "@/features/playlists/components/EditPlaylist.vue";
 import PlaylistOptionsMenu from "@/features/playlists/components/PlaylistOptionsMenu.vue";
 import DeletePlaylist from "./components/DeletePlaylist.vue";
-import { useFavoriteActions } from "@/composables/useFavoritesActions";
 import { usePlaylists } from "@/composables/usePlaylists";
-import { usePlayer } from "@/composables/usePlayer";
-import { useActionToast } from "@/composables/useActionToast";
-import { useInfiniteScroll } from "@/composables/useInfiniteScroll";
+import { useTrackListView } from "@/composables/useTrackListView";
 import { getSpotifyPlaylist, getSpotifyPlaylistTracks, type SpotifyPlaylistDetails } from "@/services/spotify/api/spotifyPlaylist";
 import type { Track } from "@/types/music";
 
@@ -132,58 +133,67 @@ const route = useRoute();
 const router = useRouter();
 const playlistId = computed(() => route.params.id as string);
 
-// Playlists
+// Playlists (saved in Appwrite) or a Spotify playlist
 const { playlists, loadPlaylists, removeTrackFromPlaylist } = usePlaylists();
 
 const localPlaylist = computed(() =>
-  playlists.value.find((item) => item.id === playlistId.value)
+  playlists.value.find((item) => item.id === playlistId.value),
 );
 
 const spotifyPlaylist = ref<SpotifyPlaylistDetails | null>(null);
 const isSpotifyPlaylist = ref(false);
 const isLoadingPlaylist = ref(false);
 
-const playlist = computed(() =>
-  localPlaylist.value ?? spotifyPlaylist.value
+const playlist = computed(() => localPlaylist.value ?? spotifyPlaylist.value);
+
+const tracksUnavailable = computed(
+  () => isSpotifyPlaylist.value && spotifyPlaylist.value?.tracksUnavailable === true,
 );
 
-// Infinite Scroll
-const visibleCount = ref(10);
+// Prevents Old Requests From Updating a New Playlist
+let loadRequestId = 0;
 
-const tracksUnavailable = computed(() =>
-  isSpotifyPlaylist.value &&
-  spotifyPlaylist.value?.tracksUnavailable === true
+// Loads the Next Page of Spotify Songs
+const loadMoreSpotifyTracks = async () => {
+  if (!spotifyPlaylist.value) return;
+
+  const requestId = loadRequestId;
+  const nextPage = await getSpotifyPlaylistTracks(
+    playlistId.value,
+    spotifyPlaylist.value.nextOffset,
+  );
+
+  if (requestId !== loadRequestId || !spotifyPlaylist.value) return;
+
+  spotifyPlaylist.value = {
+    ...spotifyPlaylist.value,
+    tracks: [...spotifyPlaylist.value.tracks, ...nextPage.tracks],
+    hasMore: nextPage.hasMore,
+    nextOffset: nextPage.nextOffset,
+  };
+};
+
+// Shared list behavior (paging, playback, menu, favorites, toast)
+const {
+  visibleTracks, hasMore, loadMoreTrigger, isLoadingMore, loadingAnnouncement, resetList,
+  openMenu, toggleMenu, isPlaying, activeTrackId, activeTrackIndex,
+  playbackMessage, handleTrackClick, playAll, isFavorite, handleFavoriteClick,
+  showToast, toastType, toastAction, toastTrackName, toastPlaylistName, triggerToast, closeToast,
+} = useTrackListView(
+  computed(() => playlist.value?.tracks ?? []),
+  {
+    label: "playlist songs",
+    source: () => ({ type: "playlist", id: playlistId.value }),
+    canLoadMore: computed(
+      () => !!playlist.value && !tracksUnavailable.value && !isLoadingPlaylist.value,
+    ),
+    remote: {
+      active: isSpotifyPlaylist,
+      hasMore: computed(() => spotifyPlaylist.value?.hasMore === true),
+      loadMore: loadMoreSpotifyTracks,
+    },
+  },
 );
-
-const visibleTracks = computed(() => {
-  if (!playlist.value) return [];
-
-  return isSpotifyPlaylist.value
-    ? playlist.value.tracks
-    : playlist.value.tracks.slice(0, visibleCount.value);
-});
-
-const hasMore = computed(() => {
-  if (!playlist.value || tracksUnavailable.value || isLoadingPlaylist.value) {
-    return false;
-  }
-
-  return isSpotifyPlaylist.value
-    ? spotifyPlaylist.value?.hasMore === true
-    : visibleCount.value < playlist.value.tracks.length;
-});
-
-// Player
-const { currentTrack, currentIndex, isPlaying, playTracks } = usePlayer();
-
-// Favorites
-const { isFavorite, handleFavoriteClick } = useFavoriteActions();
-
-// Action Toast
-const { showToast, toastType, toastAction, toastTrackName, toastPlaylistName, triggerToast, closeToast } = useActionToast();
-
-// Track Menu
-const openMenu = ref<number | null>(null);
 
 // Playlist Dialogs
 const showEditPlaylist = ref(false);
@@ -192,54 +202,18 @@ const showDeleteConfirmation = ref(false);
 const deletingPlaylistId = ref("");
 const deletingPlaylistName = ref("");
 
-// Prevents Old Requests From Updating a New Playlist
-let loadRequestId = 0;
-
-// Reusable Infinite Scroll
-const { loadMoreTrigger, isLoadingMore, loadingAnnouncement, reset } = useInfiniteScroll(hasMore, async () => {
-  if (isSpotifyPlaylist.value && spotifyPlaylist.value) {
-    const requestId = loadRequestId;
-    const currentPlaylistId = playlistId.value;
-    const currentOffset = spotifyPlaylist.value.nextOffset;
-
-    // Loads the Next 10 Spotify Songs
-    const nextPage = await getSpotifyPlaylistTracks(
-      currentPlaylistId,
-      currentOffset
-    );
-
-    if (requestId !== loadRequestId) return;
-
-    spotifyPlaylist.value = {
-      ...spotifyPlaylist.value,
-      tracks: [...spotifyPlaylist.value.tracks, ...nextPage.tracks],
-      hasMore: nextPage.hasMore,
-      nextOffset: nextPage.nextOffset,
-    };
-  } else {
-    // Displays the Next 10 Playlist Songs
-    visibleCount.value = Math.min(
-      visibleCount.value + 10,
-      localPlaylist.value?.tracks.length ?? 0
-    );
-  }
-});
-
 // Updates SEO
 useHead({
   title: computed(() =>
-    playlist.value
-      ? `${playlist.value.name} | Purrify`
-      : "Playlist | Purrify"
+    playlist.value ? `${playlist.value.name} | Purrify` : "Playlist | Purrify",
   ),
-
   meta: [
     {
       name: "description",
       content: computed(() =>
         playlist.value
           ? `Listen to ${playlist.value.name} and explore its songs on Purrify.`
-          : "Listen to your playlists and favorite songs on Purrify."
+          : "Listen to your playlists and favorite songs on Purrify.",
       ),
     },
   ],
@@ -251,9 +225,8 @@ const loadPlaylist = async () => {
 
   spotifyPlaylist.value = null;
   isSpotifyPlaylist.value = false;
-  visibleCount.value = 10;
   isLoadingPlaylist.value = true;
-  reset();
+  resetList();
 
   try {
     // Load Playlists From Appwrite
@@ -261,9 +234,7 @@ const loadPlaylist = async () => {
 
     if (requestId !== loadRequestId) return;
 
-    if (localPlaylist.value) {
-      return;
-    }
+    if (localPlaylist.value) return;
 
     // Load Spotify Playlist
     const result = await getSpotifyPlaylist(playlistId.value);
@@ -284,33 +255,6 @@ const loadPlaylist = async () => {
   }
 };
 
-// Plays All Playlist Songs
-const playAll = async () => {
-  if (!playlist.value || playlist.value.tracks.length === 0) return;
-
-  try {
-    await playTracks(playlist.value.tracks, 0);
-  } catch (error) {
-    console.error("Failed to play playlist:", error);
-  }
-};
-
-// Plays Selected Song
-const handleTrackClick = async (_track: Track, index: number) => {
-  if (!playlist.value) return;
-
-  try {
-    await playTracks(playlist.value.tracks, index);
-  } catch (error) {
-    console.error("Failed to play track:", error);
-  }
-};
-
-// Toggles Track Menu
-const toggleMenu = (index: number) => {
-  openMenu.value = openMenu.value === index ? null : index;
-};
-
 // Removes Track From Playlist
 const handleRemoveTrack = async (track: Track) => {
   if (isSpotifyPlaylist.value || !localPlaylist.value) return;
@@ -319,10 +263,7 @@ const handleRemoveTrack = async (track: Track) => {
   const playlistName = currentPlaylist.name;
 
   try {
-    const removed = await removeTrackFromPlaylist(
-      currentPlaylist.id,
-      track.id
-    );
+    const removed = await removeTrackFromPlaylist(currentPlaylist.id, track.id);
 
     if (!removed) {
       console.error("Track could not be removed from playlist.");
@@ -394,7 +335,7 @@ watch(
 
     void loadPlaylist();
   },
-  { immediate: true }
+  { immediate: true },
 );
 
 </script>

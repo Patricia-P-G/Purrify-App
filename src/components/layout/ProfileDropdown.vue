@@ -52,10 +52,10 @@
         <button type="button" class="flex w-full cursor-pointer items-center gap-3 rounded-2xl px-4 py-3 text-left text-sm font-semibold
           text-primary transition duration-200 hover:bg-primary-light focus-visible:outline-2 focus-visible:outline-offset-2
           focus-visible:outline-primary active:scale-[0.98] motion-reduce:transform-none motion-reduce:transition-none"
-          @click="handleLogout">
+          :disabled="isLoggingOut" @click="handleLogout">
 
           <img src="@/assets/icons/log-out.svg" alt="" class="h-5 w-5" aria-hidden="true"/>
-          <span>Log out</span>
+          <span>{{ isLoggingOut ? "Logging out..." : "Log out" }}</span>
         </button>
       </div>
     </div>
@@ -65,26 +65,20 @@
 
 <script setup lang="ts">
 import { nextTick, onBeforeUnmount, onMounted, ref, watch } from "vue";
-import { useRoute, useRouter } from "vue-router";
-import { AppwriteException } from "appwrite";
-import { account } from "@/services/appwrite/client";
-import { useFavorites } from "@/composables/useFavorites";
-import { usePlaylists } from "@/composables/usePlaylists";
+import { useRoute } from "vue-router";
+import { useLogout } from "@/composables/useLogout";
 
 defineProps<{
   profileImage: string;
   profileName: string;
 }>();
 
-const router = useRouter();
 const route = useRoute();
 
-const { resetFavorites } = useFavorites();
-const { resetPlaylists } = usePlaylists();
+const { isLoggingOut, logout } = useLogout();
 
 // Dropdown State
 const isOpen = ref(false);
-const isLoggingOut = ref(false);
 const dropdownRef = ref<HTMLElement | null>(null);
 const profileButtonRef = ref<HTMLButtonElement | null>(null);
 
@@ -134,44 +128,9 @@ watch(() => route.fullPath, closeDropdown);
 
 // Logs Out of Spotify and Appwrite
 const handleLogout = async () => {
-  if (isLoggingOut.value) return;
+  const loggedOut = await logout();
 
-  isLoggingOut.value = true;
-
-  try {
-    // End the Current Appwrite Session
-    try {
-      await account.deleteSession({
-        sessionId: "current",
-      });
-    } catch (error) {
-      // Ignore Missing or Expired Sessions
-      if (
-        !(error instanceof AppwriteException) ||
-        error.code !== 401
-      ) {
-        throw error;
-      }
-    }
-
-    // Clear Spotify Authentication Tokens
-    localStorage.removeItem("access_token");
-    localStorage.removeItem("refresh_token");
-    localStorage.removeItem("token_expires_at");
-    localStorage.removeItem("code_verifier");
-
-    // Clear User-Specific Local State
-    resetFavorites();
-    resetPlaylists();
-
-    // Close Dropdown and Redirect
-    closeDropdown();
-    await router.replace("/");
-  } catch (error) {
-    console.error("Logout failed:", error);
-  } finally {
-    isLoggingOut.value = false;
-  }
+  if (loggedOut) closeDropdown();
 };
 
 // Event Listeners

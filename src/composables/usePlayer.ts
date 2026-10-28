@@ -15,6 +15,7 @@ export type PlayerSource = {
     | "made-for-you"
     | "recommended"
     | "favorites"
+    | "album"
     | "playlist"
     | "other";
   id?: string;

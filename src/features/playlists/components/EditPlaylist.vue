@@ -1,4 +1,3 @@
-
 <template>
   <!-- Backdrop -->
   <div class="fixed inset-0 z-200 flex items-center justify-center overflow-y-auto bg-black/30 px-3 py-4 sm:px-4 sm:py-6" @click.self="closeModal">
@@ -48,8 +47,12 @@
           <!-- Change Picture -->
           <label class="mt-3 flex cursor-pointer items-center justify-center rounded-xl px-3 py-2 text-sm font-semibold text-primary transition duration-200 hover:bg-primary-light active:scale-[0.98] motion-reduce:transform-none motion-reduce:transition-none sm:mt-4">
             Change Picture
-            <input type="file" accept="image/*" class="sr-only" @change="handleCoverChange"/>
+            <input type="file" accept="image/*" class="sr-only" @change="handleFileChange"/>
           </label>
+
+          <p v-if="coverError" class="mt-2 text-center text-xs text-red-700 md:text-left" role="alert">
+            {{ coverError }}
+          </p>
         </div>
 
         <!-- Form -->
@@ -116,6 +119,7 @@
 import { ref } from "vue";
 import { usePlaylists } from "@/composables/usePlaylists";
 import { useActionError } from "@/composables/useActionError";
+import { useCoverUpload } from "@/composables/useCoverUpload";
 import type { Playlist } from "@/composables/usePlaylists";
 
 const props = defineProps<{
@@ -132,34 +136,20 @@ const { errorMessage, isSaving, runAction } = useActionError();
 
 const name = ref(props.playlist.name);
 const description = ref(props.playlist.description ?? "");
-const coverPreview = ref<string | null>(props.playlist.cover ?? null);
+
+// Cover image (a new image is uploaded to Appwrite Storage when saving)
+const {
+  preview: coverPreview,
+  error: coverError,
+  hasChanged: coverChanged,
+  handleFileChange,
+  resolveUrl,
+  discardUpload,
+} = useCoverUpload(props.playlist.cover ?? null);
 
 // Closes the modal
 const closeModal = () => {
   emit("close");
-};
-
-// Changes the playlist cover
-const handleCoverChange = (event: Event) => {
-  const input = event.target as HTMLInputElement;
-  const file = input.files?.[0];
-
-  if (!file || !file.type.startsWith("image/")) return;
-
-  const reader = new FileReader();
-
-  reader.onload = () => {
-    if (typeof reader.result === "string") {
-      coverPreview.value = reader.result;
-    }
-  };
-
-  reader.onerror = () => {
-    console.error("Could not read playlist cover.");
-  };
-
-  reader.readAsDataURL(file);
-  input.value = "";
 };
 
 // Saves the playlist changes
@@ -172,21 +162,32 @@ const saveChanges = async () => {
   const hasChanges =
     props.playlist.name !== cleanName ||
     props.playlist.description !== cleanDescription ||
-    props.playlist.cover !== coverPreview.value;
+    coverChanged.value;
 
   if (!hasChanges) {
     closeModal();
     return;
   }
 
-  const saved = await runAction(() =>
-    updatePlaylist(
-      props.playlist.id,
-      cleanName,
-      cleanDescription,
-      coverPreview.value
-    )
-  );
+  const saved = await runAction(async () => {
+    const coverUrl = await resolveUrl();
+
+    try {
+      const updated = await updatePlaylist(
+        props.playlist.id,
+        cleanName,
+        cleanDescription,
+        coverUrl,
+      );
+
+      if (!updated) await discardUpload();
+
+      return updated;
+    } catch (error) {
+      await discardUpload();
+      throw error;
+    }
+  });
 
   if (!saved) return;
 

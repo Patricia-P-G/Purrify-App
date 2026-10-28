@@ -61,17 +61,7 @@
       </div>
 
       <!-- Error -->
-      <div v-else-if="errorMessage" class="py-12 text-center" role="alert">
-        <p class="text-sm text-text-secondary">
-          {{ errorMessage }}
-        </p>
-
-        <button type="button"
-          class="mt-4 cursor-pointer rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-white transition duration-200 hover:scale-105 hover:bg-primary-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary active:scale-95 motion-reduce:transform-none motion-reduce:transition-none"
-          @click="loadPlaylists">
-          Try again
-        </button>
-      </div>
+      <ErrorState v-else-if="errorMessage" :message="errorMessage" @retry="loadPlaylists" />
 
       <!-- Playlist Grid -->
       <ul v-else-if="playlists.length"
@@ -131,6 +121,7 @@
 
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from "vue";
+import ErrorState from "@/components/ui/ErrorState.vue";
 import { useRoute } from "vue-router";
 import { useHead } from "@unhead/vue";
 import PlayButton from "@/components/music/PlayButton.vue";

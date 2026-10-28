@@ -2,7 +2,7 @@ import { ID, Query } from "appwrite";
 import type { Models } from "appwrite";
 import type { Track } from "@/types/music";
 import { tablesDB } from "./client";
-import { DATABASE_ID, getCurrentUserId, getUserPermissions, getAllRows } from "./utils";
+import { DATABASE_ID, findRow, getCurrentUserId, getUserPermissions, getAllRows } from "./utils";
 
 const TABLE_ID = import.meta.env.VITE_APPWRITE_FAVORITES_TABLE_ID;
 
@@ -58,21 +58,19 @@ export const addFavorite = async (track: Track) => {
   });
 };
 
-// Update Existing Favorite
-export const updateFavorite = async (track: Track) => {
+// Finds the Current User's Favorite for a Track
+const findFavorite = async (trackId: string) => {
   const userId = await getCurrentUserId();
 
-  const response = await tablesDB.listRows<FavoriteRow>({
-    databaseId: DATABASE_ID,
-    tableId: TABLE_ID,
-    queries: [
-      Query.equal("userId", userId),
-      Query.equal("trackId", track.id),
-      Query.limit(1),
-    ],
-  });
+  return findRow<FavoriteRow>(TABLE_ID, [
+    Query.equal("userId", userId),
+    Query.equal("trackId", trackId),
+  ]);
+};
 
-  const favorite = response.rows[0];
+// Update Existing Favorite
+export const updateFavorite = async (track: Track) => {
+  const favorite = await findFavorite(track.id);
 
   if (!favorite) return;
 
@@ -90,25 +88,12 @@ export const updateFavorite = async (track: Track) => {
 
 // Remove Favorite
 export const removeFavorite = async (trackId: string) => {
-  const userId = await getCurrentUserId();
-
-  const response = await tablesDB.listRows<FavoriteRow>({
-    databaseId: DATABASE_ID,
-    tableId: TABLE_ID,
-    queries: [
-      Query.equal("userId", userId),
-      Query.equal("trackId", trackId),
-      Query.limit(1),
-    ],
-  });
-
-  const favorite = response.rows[0];
+  const favorite = await findFavorite(trackId);
 
   if (!favorite) {
     throw new Error(`Favorite not found: ${trackId}`);
   }
 
-  // Delete Correct Song From Appwrite
   await tablesDB.deleteRow({
     databaseId: DATABASE_ID,
     tableId: TABLE_ID,

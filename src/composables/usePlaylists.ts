@@ -1,7 +1,8 @@
 import { ref } from "vue";
 import type { Track } from "@/types/music";
 import { getPlaylists, addPlaylist, updateAppwritePlaylist, removeAppwritePlaylist, addAppwritePlaylistTrack, removeAppwritePlaylistTrack } from "@/services/appwrite/playlists";
-import { account } from "@/services/appwrite/client";
+import { getCurrentUser } from "@/services/appwrite/session";
+import { deleteCover } from "@/services/appwrite/storage";
 
 export interface Playlist {
   id: string;
@@ -39,7 +40,7 @@ export function usePlaylists() {
   // Load Saved Playlists for the Signed-In User
   const loadPlaylists = async (): Promise<void> => {
     const startedAt = version;
-    const user = await account.get();
+    const user = await getCurrentUser();
     if (startedAt !== version) return;
 
     if (userId === null) {
@@ -168,6 +169,10 @@ export function usePlaylists() {
       Object.assign(playlist, { name: cleanName, description: description.trim(), cover });
       try {
         await updateAppwritePlaylist(playlistId, cleanName, description.trim(), cover);
+
+        // Remove the replaced cover image from Storage
+        if (previous.cover !== cover) void deleteCover(previous.cover);
+
         return isCurrent(session);
       } catch (error) {
         if (isCurrent(session)) Object.assign(playlist, previous);
@@ -200,6 +205,8 @@ export function usePlaylists() {
       playlists.value = playlists.value.filter((item) => item.id !== playlistId);
       try {
         await removeAppwritePlaylist(playlistId);
+        void deleteCover(playlist.cover);
+
         return isCurrent(session);
       } catch (error) {
         if (isCurrent(session)) {

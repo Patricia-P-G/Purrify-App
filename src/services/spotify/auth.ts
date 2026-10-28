@@ -198,3 +198,12 @@ export async function getValidAccessToken(): Promise<string> {
 
   return refreshAccessToken();
 }
+
+// --------------------------------------------------- Clear Tokens ---------------------------------------------------
+
+export function clearSpotifyTokens(): void {
+  localStorage.removeItem("access_token");
+  localStorage.removeItem("refresh_token");
+  localStorage.removeItem("token_expires_at");
+  localStorage.removeItem("code_verifier");
+}

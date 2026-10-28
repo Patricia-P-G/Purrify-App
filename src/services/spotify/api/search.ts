@@ -1,3 +1,4 @@
+import { pickImage } from "@/services/spotify/images";
 import { spotifyFetch } from "@/services/spotify/api/spotifyClient";
 import { mapSpotifyTrack, type SpotifyTrack } from "@/services/spotify/spotifyTrackMapper";
 import type { Track } from "@/types/music";
@@ -77,7 +78,7 @@ export async function searchSpotify(query: string): Promise<SearchResults> {
       id: album.id,
       title: album.name,
       artist: album.artists.map((artist) => artist.name).join(", "),
-      image: album.images[0]?.url ?? "",
+      image: pickImage(album.images),
       releaseDate: album.release_date,
     }));
 
@@ -89,7 +90,7 @@ export async function searchSpotify(query: string): Promise<SearchResults> {
     .map((artist) => ({
       id: artist.id,
       name: artist.name,
-      image: artist.images[0]?.url ?? "",
+      image: pickImage(artist.images),
     }));
 
   return {

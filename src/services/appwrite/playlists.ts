@@ -2,7 +2,7 @@ import { ID, Query } from "appwrite";
 import type { Models } from "appwrite";
 import type { Track } from "@/types/music";
 import { tablesDB } from "./client";
-import { DATABASE_ID, getCurrentUserId, getUserPermissions, getAllRows } from "./utils";
+import { DATABASE_ID, findRow, getCurrentUserId, getUserPermissions, getAllRows } from "./utils";
 
 const PLAYLISTS_TABLE_ID = import.meta.env.VITE_APPWRITE_PLAYLISTS_TABLE_ID;
 const TRACKS_TABLE_ID = import.meta.env.VITE_APPWRITE_PLAYLIST_TRACKS_TABLE_ID;
@@ -143,11 +143,7 @@ export const updateAppwritePlaylist = async (
   description: string,
   cover: string | null
 ): Promise<void> => {
-  const userId = await getCurrentUserId();
-
-  // Verify Playlist Ownership
-  await verifyPlaylistOwnership(playlistId, userId);
-
+  // Row permissions make sure only the owner can update the playlist
   await tablesDB.updateRow({
     databaseId: DATABASE_ID,
     tableId: PLAYLISTS_TABLE_ID,
@@ -165,9 +161,6 @@ export const removeAppwritePlaylist = async (
   playlistId: string
 ): Promise<void> => {
   const userId = await getCurrentUserId();
-
-  // Verify Playlist Ownership
-  await verifyPlaylistOwnership(playlistId, userId);
 
   // Get Playlist Tracks
   const tracks = await getAllRows<PlaylistTrackRow>(
@@ -247,23 +240,13 @@ export const removeAppwritePlaylistTrack = async (
 ): Promise<void> => {
   const userId = await getCurrentUserId();
 
-  // Verify Playlist Ownership
-  await verifyPlaylistOwnership(playlistId, userId);
-
   // Find Matching Track
-  const response = await tablesDB.listRows<PlaylistTrackRow>({
-    databaseId: DATABASE_ID,
-    tableId: TRACKS_TABLE_ID,
-    queries: [
-      Query.equal("userId", userId),
-      Query.equal("playlistId", playlistId),
-      Query.equal("trackId", trackId),
-      Query.orderAsc("position"),
-      Query.limit(1),
-    ],
-  });
-
-  const track = response.rows[0];
+  const track = await findRow<PlaylistTrackRow>(TRACKS_TABLE_ID, [
+    Query.equal("userId", userId),
+    Query.equal("playlistId", playlistId),
+    Query.equal("trackId", trackId),
+    Query.orderAsc("position"),
+  ]);
 
   if (!track) {
     throw new Error(

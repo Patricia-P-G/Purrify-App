@@ -27,16 +27,7 @@
     </div>
 
     <!-- Error State -->
-    <div v-else-if="errorMessage" class="py-6 text-center" role="alert">
-      <p class="text-sm text-text-secondary">
-        {{ errorMessage }}
-      </p>
-
-      <button type="button" class="btn-base btn-sm mt-3 border border-primary bg-primary-pale text-primary hover:bg-primary-light"
-        @click="loadPlaylists">
-        Try again
-      </button>
-    </div>
+    <ErrorState v-else-if="errorMessage" :message="errorMessage" @retry="loadPlaylists" />
 
     <!-- Playlists -->
     <ul v-else-if="playlists.length" class="grid w-full grid-cols-2 gap-5 sm:grid-cols-4" aria-label="Made for you playlists">
@@ -87,6 +78,7 @@
 
 <script setup lang="ts">
 import { onMounted, ref } from "vue";
+import ErrorState from "@/components/ui/ErrorState.vue";
 import { getMadeForYouPlaylists, getMoodTracks, type MadeForYouPlaylist } from "@/services/spotify/api/madeForYou";
 import { usePlayer } from "@/composables/usePlayer";
 import PlayButton from "@/components/music/PlayButton.vue";

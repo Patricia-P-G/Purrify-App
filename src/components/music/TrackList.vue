@@ -224,6 +224,7 @@ import TrackActionsMenu from "@/components/music/TrackActionsMenu.vue";
 import ActionToast from "@/components/ui/ActionToast.vue";
 import { useActionToast } from "@/composables/useActionToast";
 import type { Track } from "@/types/music";
+import { formatDuration, formatDurationAccessible } from "@/utils/format";
 
 // Lazy Loaded Playlist Components
 const AddToPlaylist = defineAsyncComponent(
@@ -312,28 +313,6 @@ const closeCreatePlaylist = () => {
 const handleRemoveFromPlaylist = (track: Track, index: number) => {
   emit("menuClick", index);
   emit("removeFromPlaylist", track);
-};
-
-// Formats Track Duration
-const formatDuration = (duration?: number) => {
-  if (duration === undefined) return "—";
-
-  const minutes = Math.floor(duration / 60000);
-  const seconds = Math.floor((duration % 60000) / 1000);
-
-  return `${minutes}:${seconds.toString().padStart(2, "0")}`;
-};
-
-// Formats Track Duration for Screen Readers
-const formatDurationAccessible = (duration?: number) => {
-  if (duration === undefined) return "Duration unavailable";
-
-  const minutes = Math.floor(duration / 60000);
-  const seconds = Math.floor((duration % 60000) / 1000);
-  const minuteText = `${minutes} ${minutes === 1 ? "minute" : "minutes"}`;
-  const secondText = `${seconds} ${seconds === 1 ? "second" : "seconds"}`;
-
-  return `${minuteText} and ${secondText}`;
 };
 
 </script>

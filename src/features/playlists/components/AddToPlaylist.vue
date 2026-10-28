@@ -167,6 +167,7 @@ import { usePlaylists } from "@/composables/usePlaylists";
 import { useActionToast } from "@/composables/useActionToast";
 import { useActionError } from "@/composables/useActionError";
 import type { Track } from "@/types/music";
+import { formatDuration, formatDurationAccessible } from "@/utils/format";
 
 const props = defineProps<{
   track: Track;
@@ -222,24 +223,6 @@ const addToPlaylist = async () => {
   closeModal();
 };
 
-// Formats track duration
-const formatDuration = (duration: number) => {
-  const minutes = Math.floor(duration / 60000);
-  const seconds = Math.floor((duration % 60000) / 1000);
-
-  return `${minutes}:${seconds.toString().padStart(2, "0")}`;
-};
-
-// Formats duration for screen readers
-const formatDurationAccessible = (duration: number) => {
-  const minutes = Math.floor(duration / 60000);
-  const seconds = Math.floor((duration % 60000) / 1000);
-
-  const minuteText = `${minutes} ${minutes === 1 ? "minute" : "minutes"}`;
-  const secondText = `${seconds} ${seconds === 1 ? "second" : "seconds"}`;
-
-  return `${minuteText} and ${secondText}`;
-};
 </script>
 
 <style scoped>

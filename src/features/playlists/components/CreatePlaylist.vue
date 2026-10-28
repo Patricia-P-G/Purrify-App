@@ -39,7 +39,7 @@
             Choose an image for your playlist (optional)
           </p>
 
-          <input ref="fileInput" type="file" accept="image/*" class="sr-only" @change="handleImageUpload"/>
+          <input ref="fileInput" type="file" accept="image/*" class="sr-only" @change="handleFileChange"/>
 
           <div class="mt-3 flex flex-wrap gap-2">
             <button type="button" class="cursor-pointer rounded-xl bg-primary-light px-4 py-2 text-sm font-semibold text-primary
@@ -55,6 +55,10 @@
               Remove
             </button>
           </div>
+
+          <p v-if="coverError" class="mt-2 text-xs text-red-700" role="alert">
+            {{ coverError }}
+          </p>
         </div>
       </div>
 
@@ -156,7 +160,9 @@ import { ref } from "vue";
 import { usePlaylists } from "@/composables/usePlaylists";
 import { useActionToast } from "@/composables/useActionToast";
 import { useActionError } from "@/composables/useActionError";
+import { useCoverUpload } from "@/composables/useCoverUpload";
 import type { Track } from "@/types/music";
+import { formatDuration } from "@/utils/format";
 
 const props = defineProps<{
   track?: Track | null;
@@ -174,69 +180,24 @@ const playlistName = ref("");
 const description = ref("");
 const showNameError = ref(false);
 const fileInput = ref<HTMLInputElement | null>(null);
-const coverFile = ref<File | null>(null);
-const coverPreview = ref<string | null>(null);
+
+// Cover image (uploaded to Appwrite Storage when the playlist is created)
+const {
+  preview: coverPreview,
+  error: coverError,
+  handleFileChange,
+  remove: removeImage,
+  resolveUrl,
+  discardUpload,
+} = useCoverUpload();
 
 // Opens the file picker
 const openFilePicker = () => {
   fileInput.value?.click();
 };
 
-// Changes the playlist cover
-const handleImageUpload = (event: Event) => {
-  const input = event.target as HTMLInputElement;
-  const file = input.files?.[0];
-
-  if (!file || !file.type.startsWith("image/")) return;
-
-  coverFile.value = file;
-
-  if (coverPreview.value) {
-    URL.revokeObjectURL(coverPreview.value);
-  }
-
-  coverPreview.value = URL.createObjectURL(file);
-  input.value = "";
-};
-
-// Removes the playlist cover
-const removeImage = () => {
-  if (coverPreview.value) {
-    URL.revokeObjectURL(coverPreview.value);
-  }
-
-  coverPreview.value = null;
-  coverFile.value = null;
-};
-
-// Converts the cover to a Data URL
-const fileToDataUrl = (file: File): Promise<string> => {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-
-    reader.onload = () => {
-      if (typeof reader.result === "string") {
-        resolve(reader.result);
-        return;
-      }
-
-      reject(new Error("Could not read playlist cover."));
-    };
-
-    reader.onerror = () => {
-      reject(reader.error ?? new Error("Could not read playlist cover."));
-    };
-
-    reader.readAsDataURL(file);
-  });
-};
-
 // Closes the modal
 const closeModal = () => {
-  if (coverPreview.value) {
-    URL.revokeObjectURL(coverPreview.value);
-  }
-
   emit("close");
 };
 
@@ -256,19 +217,27 @@ const handleCreatePlaylist = async () => {
   let newPlaylistName = "";
 
   const created = await runAction(async () => {
-    const coverUrl = coverFile.value ? await fileToDataUrl(coverFile.value) : null;
+    const coverUrl = await resolveUrl();
 
-    const newPlaylist = await createPlaylist(
-      cleanName,
-      description.value.trim(),
-      coverUrl,
-      props.track ?? null,
-    );
+    try {
+      const newPlaylist = await createPlaylist(
+        cleanName,
+        description.value.trim(),
+        coverUrl,
+        props.track ?? null,
+      );
 
-    if (!newPlaylist) return false;
+      if (!newPlaylist) {
+        await discardUpload();
+        return false;
+      }
 
-    newPlaylistName = newPlaylist.name;
-    return true;
+      newPlaylistName = newPlaylist.name;
+      return true;
+    } catch (error) {
+      await discardUpload();
+      throw error;
+    }
   });
 
   if (!created) return;
@@ -280,14 +249,6 @@ const handleCreatePlaylist = async () => {
   });
 
   closeModal();
-};
-
-// Formats track duration
-const formatDuration = (duration: number) => {
-  const minutes = Math.floor(duration / 60000);
-  const seconds = Math.floor((duration % 60000) / 1000);
-
-  return `${minutes}:${seconds.toString().padStart(2, "0")}`;
 };
 
 </script>

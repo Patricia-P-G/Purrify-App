@@ -71,19 +71,19 @@
         <!-- Progress -->
         <div class="mt-3 flex w-full max-w-sm items-center gap-2">
           <span class="w-9 text-right text-[11px] text-text-muted">
-            {{ formatTime(spotifyPosition) }}
+            {{ formatDuration(spotifyPosition) }}
           </span>
 
           <div class="relative h-1.5 flex-1 cursor-pointer rounded-full bg-primary-light focus-visible:outline-2
            focus-visible:outline-offset-4 focus-visible:outline-primary" role="slider" tabindex="0" aria-label="Song progress"
            :aria-valuemin="0" :aria-valuemax="spotifyDuration" :aria-valuenow="spotifyPosition"
-           :aria-valuetext="`${formatTime(spotifyPosition)} of ${formatTime(spotifyDuration)}`"
+           :aria-valuetext="`${formatDuration(spotifyPosition)} of ${formatDuration(spotifyDuration)}`"
            @click="seekTrack" @keydown.left.prevent="seekBy(-5000)" @keydown.right.prevent="seekBy(5000)">
             <div class="h-full rounded-full bg-primary" :style="{ width: `${progressPercentage}%` }"></div>
           </div>
 
           <span class="w-9 text-[11px] text-text-muted">
-            {{ formatTime(spotifyDuration) }}
+            {{ formatDuration(spotifyDuration) }}
           </span>
         </div>
       </div>
@@ -233,7 +233,7 @@
         <div class="relative h-2 w-full cursor-pointer rounded-full bg-primary-light focus-visible:outline-2
          focus-visible:outline-offset-4 focus-visible:outline-primary" role="slider" tabindex="0" aria-label="Song progress"
          :aria-valuemin="0" :aria-valuemax="spotifyDuration" :aria-valuenow="spotifyPosition"
-         :aria-valuetext="`${formatTime(spotifyPosition)} of ${formatTime(spotifyDuration)}`"
+         :aria-valuetext="`${formatDuration(spotifyPosition)} of ${formatDuration(spotifyDuration)}`"
          @click="seekTrack" @keydown.left.prevent="seekBy(-5000)" @keydown.right.prevent="seekBy(5000)">
           <div class="h-full rounded-full bg-primary" :style="{ width: `${progressPercentage}%` }"></div>
           <span class="absolute top-1/2 h-4 w-4 -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary shadow-sm"
@@ -241,8 +241,8 @@
         </div>
 
         <div class="mt-2 flex items-center justify-between text-xs text-text-muted">
-          <span>{{ formatTime(spotifyPosition) }}</span>
-          <span>{{ formatTime(spotifyDuration) }}</span>
+          <span>{{ formatDuration(spotifyPosition) }}</span>
+          <span>{{ formatDuration(spotifyDuration) }}</span>
         </div>
       </div>
 
@@ -285,6 +285,7 @@ import { spotifyPosition, spotifyDuration, seekSpotifyPlayback, setSpotifyVolume
 import PlayButton from "@/components/music/PlayButton.vue";
 import favoriteIcon from "@/assets/icons/favorites.svg";
 import favoriteActiveIcon from "@/assets/icons/favorites-hover.svg";
+import { formatDuration } from "@/utils/format";
 
 const { currentTrack, isPlaying, hasMultipleTracks, togglePlay, nextTrack, previousTrack, closePlayer } = usePlayer();
 const { isFavorite, handleFavoriteClick } = useFavoriteActions();
@@ -396,14 +397,6 @@ const seekBy = async (amount: number) => {
   }
 };
 
-// Converts milliseconds into minutes and seconds
-const formatTime = (milliseconds: number) => {
-  const totalSeconds = Math.floor(milliseconds / 1000);
-  const minutes = Math.floor(totalSeconds / 60);
-  const seconds = totalSeconds % 60;
-
-  return `${minutes}:${seconds.toString().padStart(2, "0")}`;
-};
 </script>
 
 <style scoped>
