@@ -1,3 +1,4 @@
+
 <template>
   <!-- Backdrop -->
   <div class="fixed inset-0 z-200 flex items-center justify-center overflow-y-auto bg-black/30 px-3 py-4 sm:px-4 sm:py-6" @click.self="closeModal">
@@ -85,6 +86,11 @@
         </div>
       </div>
 
+      <!-- Error Message -->
+      <p v-if="errorMessage" role="alert" class="mt-4 text-sm text-red-600">
+        {{ errorMessage }}
+      </p>
+
       <!-- Actions -->
       <footer class="mt-6 flex w-full gap-3 sm:mt-8 sm:justify-end">
         <!-- Cancel -->
@@ -98,8 +104,8 @@
         <!-- Save -->
         <button type="button" class="flex-1 cursor-pointer rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-white transition duration-200 hover:bg-primary-hover
          focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary active:scale-95 disabled:cursor-not-allowed disabled:opacity-40 motion-reduce:transform-none motion-reduce:transition-none sm:min-w-30 sm:flex-none sm:px-6"
-         :disabled="!name.trim()" @click="saveChanges">
-          Save
+         :disabled="!name.trim() || isSaving" @click="saveChanges">
+          {{ isSaving ? "Saving..." : "Save" }}
         </button>
       </footer>
     </section>
@@ -108,6 +114,8 @@
 
 <script setup lang="ts">
 import { ref } from "vue";
+import { usePlaylists } from "@/composables/usePlaylists";
+import { useActionError } from "@/composables/useActionError";
 import type { Playlist } from "@/composables/usePlaylists";
 
 const props = defineProps<{
@@ -116,12 +124,11 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   close: [];
-  save: [payload: {
-    name: string;
-    description: string;
-    cover: string | null;
-  }];
+  saved: [playlistName: string];
 }>();
+
+const { updatePlaylist } = usePlaylists();
+const { errorMessage, isSaving, runAction } = useActionError();
 
 const name = ref(props.playlist.name);
 const description = ref(props.playlist.description ?? "");
@@ -156,16 +163,35 @@ const handleCoverChange = (event: Event) => {
 };
 
 // Saves the playlist changes
-const saveChanges = () => {
+const saveChanges = async () => {
+  if (!name.value.trim() || isSaving.value) return;
+
   const cleanName = name.value.trim();
+  const cleanDescription = description.value.trim();
 
-  if (!cleanName) return;
+  const hasChanges =
+    props.playlist.name !== cleanName ||
+    props.playlist.description !== cleanDescription ||
+    props.playlist.cover !== coverPreview.value;
 
-  emit("save", {
-    name: cleanName,
-    description: description.value.trim(),
-    cover: coverPreview.value,
-  });
+  if (!hasChanges) {
+    closeModal();
+    return;
+  }
+
+  const saved = await runAction(() =>
+    updatePlaylist(
+      props.playlist.id,
+      cleanName,
+      cleanDescription,
+      coverPreview.value
+    )
+  );
+
+  if (!saved) return;
+
+  emit("saved", cleanName);
+  closeModal();
 };
 
 </script>

@@ -11,7 +11,7 @@
             :disabled="playlist.tracks.length === 0" @click="playAll"/>
 
           <PlaylistOptionsMenu v-if="!isSpotifyPlaylist"
-            @edit="showEditPlaylist = true" @delete="showDeleteConfirmation = true"/>
+            @edit="showEditPlaylist = true" @delete="openDeletePlaylist"/>
         </div>
       </template>
     </MusicHeroLayout>
@@ -56,17 +56,7 @@
 
     <!-- Edit Playlist -->
     <EditPlaylist v-if="showEditPlaylist && localPlaylist" :playlist="localPlaylist"
-      @close="showEditPlaylist = false" @save="handlePlaylistEdited"/>
-
-    <!-- Delete Playlist -->
-    <DeletePlaylist v-if="showDeleteConfirmation && localPlaylist"
-      :playlist-name="localPlaylist.name" @close="showDeleteConfirmation = false"
-      @confirm="handleDeletePlaylist"/>
-
-    <!-- Action Toast -->
-    <ActionToast :show="showToast" :type="toastType" :action="toastAction"
-      :track-name="toastTrackName" :playlist-name="toastPlaylistName"
-      @close="closeToast"/>
+      @close="showEditPlaylist = false" @saved="handlePlaylistEdited"/>
   </main>
 
   <!-- Loading Playlist -->
@@ -85,26 +75,38 @@
   </main>
 
   <!-- Playlist Not Found -->
-  <main v-else class="flex min-h-125 items-center justify-center px-4">
-    <div class="text-center">
-      <div class="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-primary-light"
-        aria-hidden="true">
-        <img src="@/assets/icons/music.svg" alt="" class="h-8 w-8"/>
+  <main v-else class="px-4 py-5 sm:px-6 sm:py-8">
+    <div class="flex min-h-125 items-center justify-center rounded-4xl bg-white px-6 py-12">
+      <div class="text-center">
+        <div class="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-primary-light"
+          aria-hidden="true">
+          <img src="@/assets/icons/music.svg" alt="" class="h-8 w-8"/>
+        </div>
+
+        <h1 class="mt-5 text-2xl font-semibold text-primary-text">
+          Playlist not found
+        </h1>
+
+        <button type="button"
+          class="mt-5 cursor-pointer rounded-full bg-primary px-6 py-2.5 font-semibold text-white
+          transition duration-200 hover:bg-primary-hover
+          focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+          @click="router.push('/playlists')">
+          Back to Playlists
+        </button>
       </div>
-
-      <h1 class="mt-5 text-2xl font-semibold text-primary-text">
-        Playlist not found
-      </h1>
-
-      <button type="button"
-        class="mt-5 cursor-pointer rounded-full bg-primary px-6 py-2.5 font-semibold text-white
-        transition duration-200 hover:bg-primary-hover
-        focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
-        @click="router.push('/playlists')">
-        Back to Playlists
-      </button>
     </div>
   </main>
+
+  <!-- Delete Playlist -->
+  <DeletePlaylist v-if="showDeleteConfirmation && deletingPlaylistId"
+    :playlist-id="deletingPlaylistId" :playlist-name="deletingPlaylistName"
+    @close="closeDeletePlaylist" @deleted="handleDeletePlaylist"/>
+
+  <!-- Action Toast -->
+  <ActionToast :show="showToast" :type="toastType" :action="toastAction"
+    :track-name="toastTrackName" :playlist-name="toastPlaylistName"
+    @close="closeToast"/>
 </template>
 
 <script setup lang="ts">
@@ -126,18 +128,12 @@ import { useInfiniteScroll } from "@/composables/useInfiniteScroll";
 import { getSpotifyPlaylist, getSpotifyPlaylistTracks, type SpotifyPlaylistDetails } from "@/services/spotify/api/spotifyPlaylist";
 import type { Track } from "@/types/music";
 
-interface EditPlaylistPayload {
-  name: string;
-  description: string;
-  cover: string | null;
-}
-
 const route = useRoute();
 const router = useRouter();
 const playlistId = computed(() => route.params.id as string);
 
 // Playlists
-const { playlists, loadPlaylists, updatePlaylist, deletePlaylist, removeTrackFromPlaylist } = usePlaylists();
+const { playlists, loadPlaylists, removeTrackFromPlaylist } = usePlaylists();
 
 const localPlaylist = computed(() =>
   playlists.value.find((item) => item.id === playlistId.value)
@@ -192,6 +188,9 @@ const openMenu = ref<number | null>(null);
 // Playlist Dialogs
 const showEditPlaylist = ref(false);
 const showDeleteConfirmation = ref(false);
+
+const deletingPlaylistId = ref("");
+const deletingPlaylistName = ref("");
 
 // Prevents Old Requests From Updating a New Playlist
 let loadRequestId = 0;
@@ -344,74 +343,44 @@ const handleRemoveTrack = async (track: Track) => {
 };
 
 // Edits Playlist
-const handlePlaylistEdited = async (payload: EditPlaylistPayload) => {
+const handlePlaylistEdited = (playlistName: string) => {
+  triggerToast({
+    type: "playlist",
+    action: "updated",
+    playlistName,
+  });
+};
+
+// Opens Delete Playlist
+const openDeletePlaylist = () => {
   if (!localPlaylist.value) return;
 
-  const currentPlaylist = localPlaylist.value;
-  const cleanName = payload.name.trim();
-  const cleanDescription = payload.description.trim();
+  deletingPlaylistId.value = localPlaylist.value.id;
+  deletingPlaylistName.value = localPlaylist.value.name;
+  showDeleteConfirmation.value = true;
+};
 
-  const hasChanges =
-    currentPlaylist.name !== cleanName ||
-    currentPlaylist.description !== cleanDescription ||
-    currentPlaylist.cover !== payload.cover;
-
-  if (!hasChanges) {
-    showEditPlaylist.value = false;
-    return;
-  }
-
-  try {
-    const updated = await updatePlaylist(
-      currentPlaylist.id,
-      cleanName,
-      cleanDescription,
-      payload.cover
-    );
-
-    if (!updated) {
-      console.error("Playlist could not be updated.");
-      return;
-    }
-
-    showEditPlaylist.value = false;
-
-    triggerToast({
-      type: "playlist",
-      action: "updated",
-      playlistName: cleanName,
-    });
-  } catch (error) {
-    console.error("Failed to update playlist:", error);
-  }
+// Closes Delete Playlist
+const closeDeletePlaylist = () => {
+  showDeleteConfirmation.value = false;
+  deletingPlaylistId.value = "";
+  deletingPlaylistName.value = "";
 };
 
 // Deletes Playlist
-const handleDeletePlaylist = async () => {
-  if (!localPlaylist.value) return;
-
-  const currentPlaylist = localPlaylist.value;
-  const playlistName = currentPlaylist.name;
+const handleDeletePlaylist = async (playlistName: string) => {
+  closeDeletePlaylist();
 
   try {
-    const deleted = await deletePlaylist(currentPlaylist.id);
-
-    if (!deleted) {
-      console.error("Playlist could not be deleted.");
-      return;
-    }
-
-    showDeleteConfirmation.value = false;
+    await router.push("/playlists");
 
     triggerToast({
       type: "playlist",
       action: "deleted",
       playlistName,
     });
-
-    await router.push("/playlists");
   } catch (error) {
-    console.error("Failed to delete playlist:", error);
+    console.error("Failed to navigate after deleting playlist:", error);
   }
 };
 
@@ -420,7 +389,7 @@ watch(
   playlistId,
   () => {
     showEditPlaylist.value = false;
-    showDeleteConfirmation.value = false;
+    closeDeletePlaylist();
     openMenu.value = null;
 
     void loadPlaylist();

@@ -18,6 +18,11 @@
         "{{ playlistName }}" will be deleted. Are you sure u want to proceed?
       </p>
 
+      <!-- Error Message -->
+      <p v-if="errorMessage" role="alert" class="mt-4 text-sm text-red-600">
+        {{ errorMessage }}
+      </p>
+
       <div class="mt-6 flex gap-3">
         <button type="button" class="flex-1 cursor-pointer rounded-full border border-border px-4 py-2.5 text-sm font-semibold
          text-primary-text transition duration-200 hover:bg-surface-light focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
@@ -26,9 +31,10 @@
         </button>
 
         <button type="button" class="flex-1 cursor-pointer rounded-full bg-red-500 px-4 py-2.5 text-sm font-semibold text-white
-         transition duration-200 hover:bg-red-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-500"
-         @click="emit('confirm')">
-          Delete
+         transition duration-200 hover:bg-red-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-500
+         disabled:cursor-not-allowed disabled:opacity-40"
+         :disabled="isSaving" @click="handleDelete">
+          {{ isSaving ? "Deleting..." : "Delete" }}
         </button>
       </div>
     </section>
@@ -36,12 +42,33 @@
 </template>
 
 <script setup lang="ts">
-defineProps<{
+import { usePlaylists } from "@/composables/usePlaylists";
+import { useActionError } from "@/composables/useActionError";
+
+const props = defineProps<{
+  playlistId: string;
   playlistName: string;
 }>();
 
 const emit = defineEmits<{
   close: [];
-  confirm: [];
+  deleted: [playlistName: string];
 }>();
+
+const { deletePlaylist } = usePlaylists();
+const { errorMessage, isSaving, runAction } = useActionError();
+
+// Deletes the playlist
+const handleDelete = async () => {
+  if (isSaving.value) return;
+
+  const deleted = await runAction(() =>
+    deletePlaylist(props.playlistId)
+  );
+
+  if (!deleted) return;
+
+  emit("deleted", props.playlistName);
+};
+
 </script>

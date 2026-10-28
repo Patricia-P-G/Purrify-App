@@ -67,7 +67,7 @@
             :aria-checked="selectedPlaylistId === playlist.id"
             class="group flex w-full cursor-pointer items-center gap-3 rounded-2xl p-2.5 text-left transition duration-200 hover:bg-primary-pale focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary active:scale-[0.99] motion-reduce:transform-none motion-reduce:transition-none"
             :class="selectedPlaylistId === playlist.id ? 'bg-primary-pale' : ''"
-            @click="selectedPlaylistId = playlist.id; errorMessage = ''">
+            @click="selectedPlaylistId = playlist.id; clearError()">
 
             <img v-if="playlist.cover" :src="playlist.cover" :alt="`${playlist.name} playlist cover`"
               class="h-11 w-11 shrink-0 rounded-lg object-cover"/>
@@ -165,6 +165,7 @@
 import { ref } from "vue";
 import { usePlaylists } from "@/composables/usePlaylists";
 import { useActionToast } from "@/composables/useActionToast";
+import { useActionError } from "@/composables/useActionError";
 import type { Track } from "@/types/music";
 
 const props = defineProps<{
@@ -178,10 +179,9 @@ const emit = defineEmits<{
 
 const { playlists, addTrackToPlaylist } = usePlaylists();
 const { triggerToast } = useActionToast();
+const { errorMessage, isSaving, clearError, runAction } = useActionError();
 
 const selectedPlaylistId = ref<string | null>(null);
-const errorMessage = ref("");
-const isSaving = ref(false);
 
 // Closes the modal
 const closeModal = () => {
@@ -197,45 +197,29 @@ const openNewPlaylist = () => {
 const addToPlaylist = async () => {
   if (!selectedPlaylistId.value || isSaving.value) return;
 
-  errorMessage.value = "";
-  isSaving.value = true;
+  const playlist = playlists.value.find(
+    (playlist) => playlist.id === selectedPlaylistId.value
+  );
 
-  try {
-    const playlist = playlists.value.find(
-      (playlist) => playlist.id === selectedPlaylistId.value
-    );
-
-    if (!playlist) {
-      errorMessage.value = "Playlist could not be found.";
-      return;
-    }
-
-    const added = await addTrackToPlaylist(
-      playlist.id,
-      props.track
-    );
-
-    if (!added) {
-      errorMessage.value = "Unable to add this song. Please try again.";
-      return;
-    }
-
-    triggerToast({
-      type: "track",
-      action: "added",
-      trackName: props.track.title,
-      playlistName: playlist.name,
-    });
-
-    closeModal();
-  } catch (error) {
-    console.error("Failed to add track to playlist:", error);
-
-    errorMessage.value =
-      "Unable to save changes. Please check your internet connection and try again.";
-  } finally {
-    isSaving.value = false;
+  if (!playlist) {
+    errorMessage.value = "Playlist could not be found.";
+    return;
   }
+
+  const added = await runAction(() =>
+    addTrackToPlaylist(playlist.id, props.track)
+  );
+
+  if (!added) return;
+
+  triggerToast({
+    type: "track",
+    action: "added",
+    trackName: props.track.title,
+    playlistName: playlist.name,
+  });
+
+  closeModal();
 };
 
 // Formats track duration

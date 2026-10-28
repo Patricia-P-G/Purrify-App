@@ -125,6 +125,11 @@
         </div>
       </div>
 
+      <!-- Error Message -->
+      <p v-if="errorMessage" role="alert" class="mt-4 text-sm text-red-600">
+        {{ errorMessage }}
+      </p>
+
       <!-- Actions -->
       <footer class="mt-6 flex w-full gap-3 sm:mt-7 sm:justify-end">
         <!-- Cancel -->
@@ -138,8 +143,8 @@
         <!-- Create -->
         <button type="button" class="flex-1 cursor-pointer rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-white
          transition duration-200 hover:bg-primary-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary active:scale-95 disabled:cursor-not-allowed disabled:opacity-40 motion-reduce:transform-none motion-reduce:transition-none sm:min-w-30 sm:flex-none sm:px-6"
-         :disabled="!playlistName.trim() || isCreating" @click="handleCreatePlaylist">
-          {{ isCreating ? "Creating..." : "Create" }}
+         :disabled="!playlistName.trim() || isSaving" @click="handleCreatePlaylist">
+          {{ isSaving ? "Creating..." : "Create" }}
         </button>
       </footer>
     </section>
@@ -150,6 +155,7 @@
 import { ref } from "vue";
 import { usePlaylists } from "@/composables/usePlaylists";
 import { useActionToast } from "@/composables/useActionToast";
+import { useActionError } from "@/composables/useActionError";
 import type { Track } from "@/types/music";
 
 const props = defineProps<{
@@ -162,11 +168,11 @@ const emit = defineEmits<{
 
 const { createPlaylist } = usePlaylists();
 const { triggerToast } = useActionToast();
+const { errorMessage, isSaving, runAction } = useActionError();
 
 const playlistName = ref("");
 const description = ref("");
 const showNameError = ref(false);
-const isCreating = ref(false);
 const fileInput = ref<HTMLInputElement | null>(null);
 const coverFile = ref<File | null>(null);
 const coverPreview = ref<string | null>(null);
@@ -236,6 +242,8 @@ const closeModal = () => {
 
 // Creates the playlist
 const handleCreatePlaylist = async () => {
+  if (isSaving.value) return;
+
   const cleanName = playlistName.value.trim();
 
   if (!cleanName) {
@@ -244,9 +252,10 @@ const handleCreatePlaylist = async () => {
   }
 
   showNameError.value = false;
-  isCreating.value = true;
 
-  try {
+  let newPlaylistName = "";
+
+  const created = await runAction(async () => {
     const coverUrl = coverFile.value ? await fileToDataUrl(coverFile.value) : null;
 
     const newPlaylist = await createPlaylist(
@@ -256,23 +265,21 @@ const handleCreatePlaylist = async () => {
       props.track ?? null,
     );
 
-    if (!newPlaylist) {
-      console.error("Playlist could not be created.");
-      return;
-    }
+    if (!newPlaylist) return false;
 
-    triggerToast({
-      type: "playlist",
-      action: "created",
-      playlistName: newPlaylist.name,
-    });
+    newPlaylistName = newPlaylist.name;
+    return true;
+  });
 
-    closeModal();
-  } catch (error) {
-    console.error("Could not create playlist:", error);
-  } finally {
-    isCreating.value = false;
-  }
+  if (!created) return;
+
+  triggerToast({
+    type: "playlist",
+    action: "created",
+    playlistName: newPlaylistName,
+  });
+
+  closeModal();
 };
 
 // Formats track duration
@@ -282,4 +289,5 @@ const formatDuration = (duration: number) => {
 
   return `${minutes}:${seconds.toString().padStart(2, "0")}`;
 };
+
 </script>
