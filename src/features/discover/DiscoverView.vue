@@ -59,17 +59,17 @@ import { onMounted } from "vue";
 import { useRouter } from "vue-router";
 import MusicHeroLayout from "@/components/music/MusicHeroLayout.vue";
 
-import kpopCardMobile from "@/assets/images/genres/k-pop-card-mobile.webp";
-import chillCardMobile from "@/assets/images/genres/chill-card-mobile.webp";
-import hipHopCardMobile from "@/assets/images/genres/hip-hop-card-mobile.webp";
-import indieCardMobile from "@/assets/images/genres/indie-card-mobile.webp";
-import rockCardMobile from "@/assets/images/genres/rock-card-mobile.webp";
-import rAndBCardMobile from "@/assets/images/genres/r-and-b-card-mobile.webp";
-import jazzCardMobile from "@/assets/images/genres/jazz-card-mobile.webp";
-import lofiCardMobile from "@/assets/images/genres/lofi-card-mobile.webp";
-import electronicCardMobile from "@/assets/images/genres/electronic-card-mobile.webp";
-import classicalCardMobile from "@/assets/images/genres/classical-card-mobile.webp";
-import acousticCardMobile from "@/assets/images/genres/acoustic-card-mobile.webp";
+import kpopCard from "@/assets/images/genres/k-pop-card.webp";
+import chillCard from "@/assets/images/genres/chill-card.webp";
+import hipHopCard from "@/assets/images/genres/hip-hop-card.webp";
+import indieCard from "@/assets/images/genres/indie-card.webp";
+import rockCard from "@/assets/images/genres/rock-card.webp";
+import rAndBCard from "@/assets/images/genres/r-and-b-card.webp";
+import jazzCard from "@/assets/images/genres/jazz-card.webp";
+import lofiCard from "@/assets/images/genres/lofi-card.webp";
+import electronicCard from "@/assets/images/genres/electronic-card.webp";
+import classicalCard from "@/assets/images/genres/classical-card.webp";
+import acousticCard from "@/assets/images/genres/acoustic-card.webp";
 
 interface Genre {
   name: string;
@@ -84,62 +84,62 @@ const genres: Genre[] = [
   {
     name: "Pop",
     description: "Popular hits",
-    image: "/images/pop-card-mobile.webp",
+    image: "/images/pop-card.webp",
   },
   {
     name: "K-Pop",
     description: "Korean pop",
-    image: kpopCardMobile
+    image: kpopCard
   },
   {
     name: "Chill",
     description: "Relax and unwind",
-    image: chillCardMobile
+    image: chillCard
   },
   {
     name: "Hip Hop",
     description: "Beats and flows",
-    image: hipHopCardMobile
+    image: hipHopCard
   },
   {
     name: "Indie",
     description: "Independent sounds",
-    image: indieCardMobile
+    image: indieCard
   },
   {
     name: "Rock",
     description: "Rock favorites",
-    image: rockCardMobile
+    image: rockCard
   },
   {
     name: "R&B",
     description: "Smooth rhythms",
-    image: rAndBCardMobile
+    image: rAndBCard
   },
   {
     name: "Jazz",
     description: "Jazz classics",
-    image: jazzCardMobile
+    image: jazzCard
   },
   {
     name: "Lo-fi",
     description: "Study beats",
-    image: lofiCardMobile
+    image: lofiCard
   },
   {
     name: "Electronic",
     description: "Electronic energy",
-    image: electronicCardMobile
+    image: electronicCard
   },
   {
     name: "Classical",
     description: "Timeless pieces",
-    image: classicalCardMobile
+    image: classicalCard
   },
   {
     name: "Acoustic",
     description: "Warm acoustic sounds",
-    image: acousticCardMobile
+    image: acousticCard
   },
 ];
 
