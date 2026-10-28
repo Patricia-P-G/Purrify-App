@@ -32,6 +32,24 @@ interface PlaylistTrackRow extends Models.Row {
   position: number;
 }
 
+// Verify That Playlist Belongs To Current User
+const verifyPlaylistOwnership = async (
+  playlistId: string,
+  userId: string
+): Promise<void> => {
+  const playlist = await tablesDB.getRow<PlaylistRow>({
+    databaseId: DATABASE_ID,
+    tableId: PLAYLISTS_TABLE_ID,
+    rowId: playlistId,
+  });
+
+  if (playlist.userId !== userId) {
+    throw new Error(
+      "You do not have permission to modify this playlist."
+    );
+  }
+};
+
 // Load Playlists And Their Tracks
 export const getPlaylists = async (): Promise<SavedPlaylist[]> => {
   const userId = await getCurrentUserId();
@@ -56,8 +74,16 @@ export const getPlaylists = async (): Promise<SavedPlaylist[]> => {
 
   // Group Tracks By Playlist
   const tracksByPlaylist = new Map<string, Track[]>();
+  const ownedPlaylistIds = new Set(
+    playlistRows.map((playlist) => playlist.$id)
+  );
 
   for (const row of trackRows) {
+    // Ignore Tracks Without An Owned Playlist
+    if (!ownedPlaylistIds.has(row.playlistId)) {
+      continue;
+    }
+
     try {
       const track = JSON.parse(row.trackData) as Track;
 
@@ -117,6 +143,11 @@ export const updateAppwritePlaylist = async (
   description: string,
   cover: string | null
 ): Promise<void> => {
+  const userId = await getCurrentUserId();
+
+  // Verify Playlist Ownership
+  await verifyPlaylistOwnership(playlistId, userId);
+
   await tablesDB.updateRow({
     databaseId: DATABASE_ID,
     tableId: PLAYLISTS_TABLE_ID,
@@ -134,6 +165,9 @@ export const removeAppwritePlaylist = async (
   playlistId: string
 ): Promise<void> => {
   const userId = await getCurrentUserId();
+
+  // Verify Playlist Ownership
+  await verifyPlaylistOwnership(playlistId, userId);
 
   // Get Playlist Tracks
   const tracks = await getAllRows<PlaylistTrackRow>(
@@ -160,8 +194,14 @@ export const removeAppwritePlaylist = async (
   );
 
   if (failed.length) {
-    console.error("Failed to delete some playlist tracks:", failed);
-    throw new Error("Could not delete all playlist tracks.");
+    console.error(
+      "Failed to delete some playlist tracks:",
+      failed
+    );
+
+    throw new Error(
+      "Could not delete all playlist tracks."
+    );
   }
 
   // Delete Playlist
@@ -179,6 +219,9 @@ export const addAppwritePlaylistTrack = async (
   position: number
 ): Promise<void> => {
   const userId = await getCurrentUserId();
+
+  // Verify Playlist Ownership
+  await verifyPlaylistOwnership(playlistId, userId);
 
   await tablesDB.createRow({
     databaseId: DATABASE_ID,
@@ -204,6 +247,9 @@ export const removeAppwritePlaylistTrack = async (
 ): Promise<void> => {
   const userId = await getCurrentUserId();
 
+  // Verify Playlist Ownership
+  await verifyPlaylistOwnership(playlistId, userId);
+
   // Find Matching Track
   const response = await tablesDB.listRows<PlaylistTrackRow>({
     databaseId: DATABASE_ID,
@@ -220,7 +266,9 @@ export const removeAppwritePlaylistTrack = async (
   const track = response.rows[0];
 
   if (!track) {
-    throw new Error(`Playlist track not found: ${trackId}`);
+    throw new Error(
+      `Playlist track not found: ${trackId}`
+    );
   }
 
   // Delete Track
