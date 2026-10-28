@@ -1,4 +1,6 @@
+
 import { createRouter, createWebHistory } from "vue-router";
+import { account } from "@/services/appwrite/client";
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -16,6 +18,7 @@ const router = createRouter({
       path: "/home",
       name: "home",
       component: () => import("@/features/home/HomeView.vue"),
+      meta: { requiresAuth: true },
     },
 
     // Search
@@ -23,6 +26,7 @@ const router = createRouter({
       path: "/search",
       name: "search",
       component: () => import("@/features/search/SearchView.vue"),
+      meta: { requiresAuth: true },
     },
 
     // Playlists
@@ -30,14 +34,16 @@ const router = createRouter({
       path: "/playlists",
       name: "playlists",
       component: () => import("@/features/playlists/PlaylistsView.vue"),
+      meta: { requiresAuth: true },
     },
 
-    // Single Playlist 
+    // Single Playlist
     {
       path: "/playlists/:id",
       name: "playlist",
       component: () => import("@/features/playlists/SinglePlaylistView.vue"),
       props: true,
+      meta: { requiresAuth: true },
     },
 
     // Artists
@@ -46,6 +52,7 @@ const router = createRouter({
       name: "artist",
       component: () => import("@/features/catalog/ArtistView.vue"),
       props: true,
+      meta: { requiresAuth: true },
     },
 
     // Albums
@@ -54,6 +61,7 @@ const router = createRouter({
       name: "album",
       component: () => import("@/features/catalog/AlbumView.vue"),
       props: true,
+      meta: { requiresAuth: true },
     },
 
     // Discover
@@ -61,14 +69,16 @@ const router = createRouter({
       path: "/discover",
       name: "discover",
       component: () => import("@/features/discover/DiscoverView.vue"),
+      meta: { requiresAuth: true },
     },
-    
+
     // Genre Playlists
     {
       path: "/discover/:genre",
       name: "genre",
       component: () => import("@/features/discover/GenreView.vue"),
       props: true,
+      meta: { requiresAuth: true },
     },
 
     // Favorites
@@ -76,6 +86,7 @@ const router = createRouter({
       path: "/favorites",
       name: "favorites",
       component: () => import("@/features/favorites/FavoritesView.vue"),
+      meta: { requiresAuth: true },
     },
 
     // Recently Played
@@ -83,6 +94,7 @@ const router = createRouter({
       path: "/recently-played",
       name: "recently-played",
       component: () => import("@/features/recently-played/RecentlyPlayedView.vue"),
+      meta: { requiresAuth: true },
     },
 
     // Spotify Callback
@@ -98,6 +110,23 @@ const router = createRouter({
       redirect: "/home",
     },
   ],
+});
+
+// Protect Routes That Require Authentication
+router.beforeEach(async (to) => {
+  if (!to.meta.requiresAuth) return true;
+
+  try {
+    // Verify Active Appwrite Session
+    await account.get();
+    return true;
+  } catch {
+    // Redirect Unauthenticated Users to Login
+    return {
+      name: "login",
+      query: { redirect: to.fullPath },
+    };
+  }
 });
 
 export default router;
