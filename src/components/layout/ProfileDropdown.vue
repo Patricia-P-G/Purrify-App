@@ -47,18 +47,6 @@
         </div>
       </div>
 
-      <!-- Menu Links -->
-      <nav aria-label="Profile menu" class="p-3">
-        <!-- Profile -->
-        <RouterLink to="/profile" class="flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium text-primary-text
-         transition duration-200 hover:bg-primary-light hover:text-primary focus-visible:outline-2 focus-visible:outline-offset-2
-         focus-visible:outline-primary motion-reduce:transition-none" @click="closeDropdown">
-
-          <img src="@/assets/icons/user.svg" alt="" class="h-5 w-5" aria-hidden="true"/>
-          <span>Profile</span>
-        </RouterLink>
-      </nav>
-
       <!-- Log Out -->
       <div class="border-t border-border-pink p-3">
         <button type="button" class="flex w-full cursor-pointer items-center gap-3 rounded-2xl px-4 py-3 text-left text-sm font-semibold
@@ -74,9 +62,14 @@
   </div>
 </template>
 
+
 <script setup lang="ts">
 import { nextTick, onBeforeUnmount, onMounted, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
+import { AppwriteException } from "appwrite";
+import { account } from "@/services/appwrite/client";
+import { useFavorites } from "@/composables/useFavorites";
+import { usePlaylists } from "@/composables/usePlaylists";
 
 defineProps<{
   profileImage: string;
@@ -86,8 +79,12 @@ defineProps<{
 const router = useRouter();
 const route = useRoute();
 
+const { resetFavorites } = useFavorites();
+const { resetPlaylists } = usePlaylists();
+
 // Dropdown State
 const isOpen = ref(false);
+const isLoggingOut = ref(false);
 const dropdownRef = ref<HTMLElement | null>(null);
 const profileButtonRef = ref<HTMLButtonElement | null>(null);
 
@@ -103,7 +100,10 @@ const closeDropdown = () => {
 
 // Closes the Dropdown When Clicking Outside
 const handleClickOutside = (event: MouseEvent) => {
-  if (dropdownRef.value && !dropdownRef.value.contains(event.target as Node)) {
+  if (
+    dropdownRef.value &&
+    !dropdownRef.value.contains(event.target as Node)
+  ) {
     closeDropdown();
   }
 };
@@ -124,23 +124,53 @@ const handleButtonKeydown = async (event: KeyboardEvent) => {
   isOpen.value = true;
 
   await nextTick();
-  dropdownRef.value?.querySelector<HTMLAnchorElement>("nav a")?.focus();
+  dropdownRef.value
+  ?.querySelector<HTMLButtonElement>("#profile-dropdown button")
+  ?.focus();
 };
 
 // Closes the Dropdown When Navigating
 watch(() => route.fullPath, closeDropdown);
 
-// Logs Out of Spotify
+// Logs Out of Spotify and Appwrite
 const handleLogout = async () => {
+  if (isLoggingOut.value) return;
+
+  isLoggingOut.value = true;
+
   try {
+    // End the Current Appwrite Session
+    try {
+      await account.deleteSession({
+        sessionId: "current",
+      });
+    } catch (error) {
+      // Ignore Missing or Expired Sessions
+      if (
+        !(error instanceof AppwriteException) ||
+        error.code !== 401
+      ) {
+        throw error;
+      }
+    }
+
+    // Clear Spotify Authentication Tokens
     localStorage.removeItem("access_token");
     localStorage.removeItem("refresh_token");
+    localStorage.removeItem("token_expires_at");
     localStorage.removeItem("code_verifier");
 
+    // Clear User-Specific Local State
+    resetFavorites();
+    resetPlaylists();
+
+    // Close Dropdown and Redirect
     closeDropdown();
-    await router.push("/");
+    await router.replace("/");
   } catch (error) {
-    console.error("Spotify logout failed:", error);
+    console.error("Logout failed:", error);
+  } finally {
+    isLoggingOut.value = false;
   }
 };
 
