@@ -1,7 +1,7 @@
 import { ref } from "vue";
 import type { Track } from "@/types/music";
 import { getPlaylists, addPlaylist, updateAppwritePlaylist, removeAppwritePlaylist, addAppwritePlaylistTrack, removeAppwritePlaylistTrack } from "@/services/appwrite/playlists";
-import { account } from "@/services/appwrite/appwrite";
+import { account } from "@/services/appwrite/client";
 
 export interface Playlist {
   id: string;

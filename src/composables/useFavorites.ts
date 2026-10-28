@@ -7,7 +7,7 @@ import {
   removeFavorite as removeAppwriteFavorite,
 } from "@/services/appwrite/favorites";
 import { getTracksByIds } from "@/services/spotify/api/tracks";
-import { account } from "@/services/appwrite/appwrite";
+import { account } from "@/services/appwrite/client";
 
 const favoriteTracks = ref<Track[]>([]);
 const favoriteIds = ref<string[]>([]);

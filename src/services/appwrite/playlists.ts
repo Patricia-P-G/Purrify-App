@@ -1,9 +1,9 @@
-import { ID, Query, Permission, Role } from "appwrite";
+import { ID, Query } from "appwrite";
 import type { Models } from "appwrite";
 import type { Track } from "@/types/music";
-import { account, tablesDB } from "./appwrite";
+import { tablesDB } from "./client";
+import { DATABASE_ID, getCurrentUserId, getUserPermissions, getAllRows } from "./utils";
 
-const DATABASE_ID = import.meta.env.VITE_APPWRITE_DATABASE_ID;
 const PLAYLISTS_TABLE_ID = import.meta.env.VITE_APPWRITE_PLAYLISTS_TABLE_ID;
 const TRACKS_TABLE_ID = import.meta.env.VITE_APPWRITE_PLAYLIST_TRACKS_TABLE_ID;
 
@@ -32,56 +32,10 @@ interface PlaylistTrackRow extends Models.Row {
   position: number;
 }
 
-// Get Current User
-const getCurrentUserId = async (): Promise<string> => {
-  const user = await account.get();
-  return user.$id;
-};
-
-// Permissions For Current User
-const getUserPermissions = (userId: string) => [
-  Permission.read(Role.user(userId)),
-  Permission.update(Role.user(userId)),
-  Permission.delete(Role.user(userId)),
-];
-
-// Get All Rows With Pagination
-const getAllRows = async <T extends Models.Row>(
-  tableId: string,
-  queries: string[]
-): Promise<T[]> => {
-  const rows: T[] = [];
-  let offset = 0;
-  const limit = 100;
-
-  while (true) {
-    const response = await tablesDB.listRows<T>({
-      databaseId: DATABASE_ID,
-      tableId,
-      queries: [
-        ...queries,
-        Query.limit(limit),
-        Query.offset(offset),
-      ],
-    });
-
-    rows.push(...response.rows);
-
-    if (response.rows.length < limit) {
-      break;
-    }
-
-    offset += limit;
-  }
-
-  return rows;
-};
-
 // Load Playlists And Their Tracks
 export const getPlaylists = async (): Promise<SavedPlaylist[]> => {
   const userId = await getCurrentUserId();
 
-  // Load Playlists
   const playlistRows = await getAllRows<PlaylistRow>(
     PLAYLISTS_TABLE_ID,
     [
@@ -90,11 +44,8 @@ export const getPlaylists = async (): Promise<SavedPlaylist[]> => {
     ]
   );
 
-  if (!playlistRows.length) {
-    return [];
-  }
+  if (!playlistRows.length) return [];
 
-  // Load Playlist Tracks
   const trackRows = await getAllRows<PlaylistTrackRow>(
     TRACKS_TABLE_ID,
     [
@@ -110,20 +61,13 @@ export const getPlaylists = async (): Promise<SavedPlaylist[]> => {
     try {
       const track = JSON.parse(row.trackData) as Track;
 
-      if (track.id !== row.trackId) {
-        continue;
-      }
+      if (track.id !== row.trackId) continue;
 
       const tracks = tracksByPlaylist.get(row.playlistId) ?? [];
-
       tracks.push(track);
-
       tracksByPlaylist.set(row.playlistId, tracks);
     } catch (error) {
-      console.error(
-        "Invalid playlist track data:",
-        error
-      );
+      console.error("Invalid playlist track data:", error);
     }
   }
 
@@ -216,14 +160,8 @@ export const removeAppwritePlaylist = async (
   );
 
   if (failed.length) {
-    console.error(
-      "Failed to delete some playlist tracks:",
-      failed
-    );
-
-    throw new Error(
-      "Could not delete all playlist tracks."
-    );
+    console.error("Failed to delete some playlist tracks:", failed);
+    throw new Error("Could not delete all playlist tracks.");
   }
 
   // Delete Playlist
@@ -282,9 +220,7 @@ export const removeAppwritePlaylistTrack = async (
   const track = response.rows[0];
 
   if (!track) {
-    throw new Error(
-      `Playlist track not found: ${trackId}`
-    );
+    throw new Error(`Playlist track not found: ${trackId}`);
   }
 
   // Delete Track

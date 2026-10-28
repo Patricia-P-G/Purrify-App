@@ -1,10 +1,12 @@
-import { ID, Query, Permission, Role } from "appwrite";
+import { ID, Query } from "appwrite";
+import type { Models } from "appwrite";
 import type { Track } from "@/types/music";
-import { account, tablesDB } from "./appwrite";
+import { tablesDB } from "./client";
+import { DATABASE_ID, getCurrentUserId, getUserPermissions, getAllRows } from "./utils";
 
-const DATABASE_ID = import.meta.env.VITE_APPWRITE_DATABASE_ID;
-const TABLE_ID = "favorites";
+const TABLE_ID = import.meta.env.VITE_APPWRITE_FAVORITES_TABLE_ID;
 
+// Favorite Types
 export interface SavedFavorite {
   trackId: string;
   title: string | null;
@@ -12,46 +14,29 @@ export interface SavedFavorite {
   trackData: string | null;
 }
 
-// Get Current User
-const getCurrentUserId = async (): Promise<string> => {
-  const user = await account.get();
-  return user.$id;
-};
+interface FavoriteRow extends Models.Row {
+  userId: string;
+  trackId: string;
+  title: string | null;
+  artist: string | null;
+  trackData: string | null;
+}
 
 // Get Favorites From Appwrite
 export const getFavorites = async (): Promise<SavedFavorite[]> => {
   const userId = await getCurrentUserId();
 
-  const favorites: SavedFavorite[] = [];
-  let offset = 0;
-  const limit = 100;
+  const rows = await getAllRows<FavoriteRow>(TABLE_ID, [
+    Query.equal("userId", userId),
+    Query.orderDesc("$createdAt"),
+  ]);
 
-  while (true) {
-    const response = await tablesDB.listRows({
-      databaseId: DATABASE_ID,
-      tableId: TABLE_ID,
-      queries: [
-        Query.equal("userId", userId),
-        Query.orderDesc("$createdAt"),
-        Query.limit(limit),
-        Query.offset(offset),
-      ],
-    });
-
-    favorites.push(
-      ...response.rows.map((row) => ({
-        trackId: row.trackId as string,
-        title: (row.title as string | null) ?? null,
-        artist: (row.artist as string | null) ?? null,
-        trackData: (row.trackData as string | null) ?? null,
-      }))
-    );
-
-    if (response.rows.length < limit) break;
-    offset += limit;
-  }
-
-  return favorites;
+  return rows.map((row) => ({
+    trackId: row.trackId,
+    title: row.title ?? null,
+    artist: row.artist ?? null,
+    trackData: row.trackData ?? null,
+  }));
 };
 
 // Add Favorite
@@ -69,11 +54,7 @@ export const addFavorite = async (track: Track) => {
       artist: track.artist,
       trackData: JSON.stringify(track),
     },
-    permissions: [
-      Permission.read(Role.user(userId)),
-      Permission.update(Role.user(userId)),
-      Permission.delete(Role.user(userId)),
-    ],
+    permissions: getUserPermissions(userId),
   });
 };
 
@@ -81,7 +62,7 @@ export const addFavorite = async (track: Track) => {
 export const updateFavorite = async (track: Track) => {
   const userId = await getCurrentUserId();
 
-  const response = await tablesDB.listRows({
+  const response = await tablesDB.listRows<FavoriteRow>({
     databaseId: DATABASE_ID,
     tableId: TABLE_ID,
     queries: [
@@ -111,7 +92,7 @@ export const updateFavorite = async (track: Track) => {
 export const removeFavorite = async (trackId: string) => {
   const userId = await getCurrentUserId();
 
-  const response = await tablesDB.listRows({
+  const response = await tablesDB.listRows<FavoriteRow>({
     databaseId: DATABASE_ID,
     tableId: TABLE_ID,
     queries: [

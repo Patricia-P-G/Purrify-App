@@ -1,6 +1,6 @@
 import { ref } from "vue";
 import { ID } from "appwrite";
-import { account } from "@/services/appwrite/appwrite";
+import { account } from "@/services/appwrite/client";
 import { useFavorites } from "@/composables/useFavorites";
 
 const loggedInUser = ref<any>(null);
