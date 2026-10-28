@@ -67,7 +67,7 @@
             :aria-checked="selectedPlaylistId === playlist.id"
             class="group flex w-full cursor-pointer items-center gap-3 rounded-2xl p-2.5 text-left transition duration-200 hover:bg-primary-pale focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary active:scale-[0.99] motion-reduce:transform-none motion-reduce:transition-none"
             :class="selectedPlaylistId === playlist.id ? 'bg-primary-pale' : ''"
-            @click="selectedPlaylistId = playlist.id">
+            @click="selectedPlaylistId = playlist.id; errorMessage = ''">
 
             <img v-if="playlist.cover" :src="playlist.cover" :alt="`${playlist.name} playlist cover`"
               class="h-11 w-11 shrink-0 rounded-lg object-cover"/>
@@ -134,6 +134,11 @@
         </button>
       </div>
 
+      <!-- Error Message -->
+      <p v-if="errorMessage" role="alert" class="mt-4 text-sm text-red-600">
+        {{ errorMessage }}
+      </p>
+
       <!-- Actions -->
       <footer class="mt-6 flex w-full gap-3 sm:mt-7 sm:justify-end">
         <!-- Cancel -->
@@ -148,7 +153,7 @@
         <button type="button" class="flex-1 cursor-pointer rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-white
          transition duration-200 hover:bg-primary-hover focus-visible:outline-2 focus-visible:outline-offset-2
          focus-visible:outline-primary active:scale-95 disabled:cursor-not-allowed disabled:opacity-40 motion-reduce:transform-none
-         motion-reduce:transition-none sm:min-w-30 sm:flex-none sm:px-6" :disabled="!selectedPlaylistId" @click="addToPlaylist">
+         motion-reduce:transition-none sm:min-w-30 sm:flex-none sm:px-6" :disabled="!selectedPlaylistId || isSaving" @click="addToPlaylist">
           Add
         </button>
       </footer>
@@ -175,6 +180,8 @@ const { playlists, addTrackToPlaylist } = usePlaylists();
 const { triggerToast } = useActionToast();
 
 const selectedPlaylistId = ref<string | null>(null);
+const errorMessage = ref("");
+const isSaving = ref(false);
 
 // Closes the modal
 const closeModal = () => {
@@ -188,25 +195,28 @@ const openNewPlaylist = () => {
 
 // Adds the track to the selected playlist
 const addToPlaylist = async () => {
-  if (!selectedPlaylistId.value) return;
+  if (!selectedPlaylistId.value || isSaving.value) return;
 
-  const playlist = playlists.value.find(
-    (playlist) => playlist.id === selectedPlaylistId.value
-  );
-
-  if (!playlist) {
-    console.error("Playlist could not be found.");
-    return;
-  }
+  errorMessage.value = "";
+  isSaving.value = true;
 
   try {
+    const playlist = playlists.value.find(
+      (playlist) => playlist.id === selectedPlaylistId.value
+    );
+
+    if (!playlist) {
+      errorMessage.value = "Playlist could not be found.";
+      return;
+    }
+
     const added = await addTrackToPlaylist(
       playlist.id,
       props.track
     );
 
     if (!added) {
-      console.error("Track could not be added.");
+      errorMessage.value = "Unable to add this song. Please try again.";
       return;
     }
 
@@ -220,6 +230,11 @@ const addToPlaylist = async () => {
     closeModal();
   } catch (error) {
     console.error("Failed to add track to playlist:", error);
+
+    errorMessage.value =
+      "Unable to save changes. Please check your internet connection and try again.";
+  } finally {
+    isSaving.value = false;
   }
 };
 
