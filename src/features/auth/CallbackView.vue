@@ -4,8 +4,13 @@ import { useRouter } from "vue-router";
 import { getToken } from "@/services/spotify/auth";
 import { initializeSpotifyPlayer } from "@/services/spotify/spotifyPlayer";
 import { loginWithAppwrite } from "@/services/appwrite/auth";
+import { useFavorites } from "@/composables/useFavorites";
+import { usePlaylists } from "@/composables/usePlaylists";
 
 const router = useRouter();
+
+const { loadFavorites } = useFavorites();
+const { loadPlaylists } = usePlaylists();
 
 // Spotify Authentication Callback
 onMounted(async () => {
@@ -24,6 +29,12 @@ onMounted(async () => {
 
     // Authenticate Spotify User with Appwrite
     await loginWithAppwrite(tokenData.access_token);
+
+    // Restore Saved Favorites and Playlists
+    await Promise.all([
+      loadFavorites(),
+      loadPlaylists(),
+    ]);
 
     // Initialize Spotify Player
     initializeSpotifyPlayer();
