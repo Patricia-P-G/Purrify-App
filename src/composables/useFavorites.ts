@@ -303,11 +303,12 @@ export function useFavorites() {
   // Toggle Favorite
   const toggleFavorite = async (
     track: Track
-  ): Promise<boolean> => {
+  ): Promise<boolean | null> => {
     await loadFavorites();
 
+    // A concurrent action must not be reported as a successful toggle.
     if (pendingTracks.has(track.id)) {
-      return isFavorite(track.id);
+      return null;
     }
 
     if (isFavorite(track.id)) {
