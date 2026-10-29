@@ -206,23 +206,20 @@
 
   <!-- Add to Playlist -->
   <AddToPlaylist v-if="selectedTrackForPlaylist" :track="selectedTrackForPlaylist"
-    @close="closeAddToPlaylist" @new-playlist="handleNewPlaylist"/>
+    @close="closeAddToPlaylist" @new-playlist="handleNewPlaylist"
+  />
 
   <!-- Create Playlist -->
   <CreatePlaylist v-if="selectedTrackForCreatePlaylist" :track="selectedTrackForCreatePlaylist"
-    @close="closeCreatePlaylist"/>
+    @close="closeCreatePlaylist"
+  />
 
-  <!-- Action Toast -->
-  <ActionToast :show="showToast" :type="toastType" :action="toastAction"
-    :track-name="toastTrackName" :playlist-name="toastPlaylistName" @close="closeToast"/>
 </template>
 
 <script setup lang="ts">
 import { defineAsyncComponent, ref } from "vue";
 import PlayButton from "@/components/music/PlayButton.vue";
 import TrackActionsMenu from "@/components/music/TrackActionsMenu.vue";
-import ActionToast from "@/components/ui/ActionToast.vue";
-import { useActionToast } from "@/composables/useActionToast";
 import type { Track } from "@/types/music";
 import { formatDuration, formatDurationAccessible } from "@/utils/format";
 
@@ -270,7 +267,6 @@ const emit = defineEmits<{
 }>();
 
 // Action Toast
-const { showToast, toastType, toastAction, toastTrackName, toastPlaylistName, closeToast } = useActionToast();
 
 // Playlist State
 const selectedTrackForPlaylist = ref<Track | null>(null);

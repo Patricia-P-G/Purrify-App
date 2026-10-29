@@ -105,11 +105,7 @@
         </p>
       </div>
     </div>
-
-    <!-- Action Toast -->
-    <ActionToast :show="showToast" :type="toastType" :action="toastAction"
-      :track-name="toastTrackName" :playlist-name="toastPlaylistName" @close="closeToast"
-    />
+    
   </main>
 </template>
 
@@ -119,10 +115,8 @@ import { useRoute } from "vue-router";
 import { useHead } from "@unhead/vue";
 import TrackList from "@/components/music/TrackList.vue";
 import AlbumSection from "@/components/music/AlbumSection.vue";
-import ActionToast from "@/components/ui/ActionToast.vue";
 import { usePlayer } from "@/composables/usePlayer";
 import { useFavoriteActions } from "@/composables/useFavoritesActions";
-import { useActionToast } from "@/composables/useActionToast";
 import { getArtist, getArtistTopTracks, getArtistAlbums, type ArtistDetails, type ArtistAlbum } from "@/services/spotify/api/artist";
 import type { Track } from "@/types/music";
 
@@ -142,7 +136,6 @@ let loadRequestId = 0;
 
 const { currentTrack, currentIndex, isPlaying, playTracks, togglePlay } = usePlayer();
 const { isFavorite, handleFavoriteClick } = useFavoriteActions();
-const { showToast, toastType, toastAction, toastTrackName, toastPlaylistName, closeToast } = useActionToast();
 
 // Displays the first five popular songs
 const visibleTracks = computed(() =>

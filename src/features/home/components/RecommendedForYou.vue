@@ -75,10 +75,6 @@
       {{ playbackError }}
     </p>
 
-    <!-- Action Toast -->
-    <ActionToast :show="showToast" :type="toastType" :action="toastAction" :track-name="toastTrackName"
-     :playlist-name="toastPlaylistName" @close="closeToast"
-    />
   </section>
 </template>
 
@@ -87,10 +83,9 @@ import { computed, onMounted, ref } from "vue";
 import ErrorState from "@/components/ui/ErrorState.vue";
 import { getRecommendedSongs } from "@/services/spotify/api/recommendedForYou";
 import { usePlayer } from "@/composables/usePlayer";
+import { usePlaybackAction } from "@/composables/usePlaybackAction";
 import { useFavoriteActions } from "@/composables/useFavoritesActions";
-import { useActionToast } from "@/composables/useActionToast";
 import TrackList from "@/components/music/TrackList.vue";
-import ActionToast from "@/components/ui/ActionToast.vue";
 import type { Track } from "@/types/music";
 
 // Recommended Songs
@@ -98,9 +93,10 @@ const recommendedSongs = ref<Track[]>([]);
 
 // UI State
 const isLoading = ref(true);
-const isPlaybackPending = ref(false);
 const errorMessage = ref("");
-const playbackError = ref("");
+
+// Playback (one request at a time, with an error message)
+const { isPending: isPlaybackPending, error: playbackError, run: runPlayback } = usePlaybackAction();
 
 // Track Menu
 const openMenu = ref<number | null>(null);
@@ -120,9 +116,6 @@ const recommendedTrackIndex = computed(() => {
 // Favorites
 const { isFavorite, handleFavoriteClick: toggleFavoriteTrack } = useFavoriteActions();
 
-// Action Toast
-const { showToast, toastType, toastAction, toastTrackName, toastPlaylistName, closeToast } = useActionToast();
-
 // Gets Recommended Songs from Spotify
 const loadRecommendations = async () => {
   isLoading.value = true;
@@ -139,39 +132,19 @@ const loadRecommendations = async () => {
 };
 
 // Plays a Track or Toggles Play/Pause
-const handleTrackClick = async (track: Track, index: number) => {
-  // Prevent Overlapping Playback Requests
-  if (isPlaybackPending.value) {
-    return;
-  }
-
-  isPlaybackPending.value = true;
-  playbackError.value = "";
-
-  try {
-    // Check Whether the Track Is Already Selected
+const handleTrackClick = (track: Track, index: number) =>
+  runPlayback(async () => {
     const isCurrentTrack =
       playerSource.value?.type === "recommended" &&
       currentTrack.value?.id === track.id &&
       currentIndex.value === index;
 
-    // Toggle Current Track
     if (isCurrentTrack) {
       await togglePlay();
-      return;
+    } else {
+      await playTracks(recommendedSongs.value, index, { type: "recommended" });
     }
-
-    // Play Selected Track
-    await playTracks(recommendedSongs.value, index, {
-      type: "recommended",
-    });
-  } catch (error) {
-    console.error("Failed to control recommended track:", error);
-    playbackError.value = `Unable to control playback for ${track.title}. Please try again.`;
-  } finally {
-    isPlaybackPending.value = false;
-  }
-};
+  }, `Unable to control playback for ${track.title}. Please try again.`);
 
 // Adds or Removes a Song from Favorites
 const handleFavoriteClick = (track: Track) => {

@@ -252,9 +252,7 @@
          class="flex h-12 w-12 cursor-pointer items-center justify-center rounded-full text-text-secondary transition
          hover:bg-primary-light focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary active:scale-90
          disabled:cursor-not-allowed disabled:opacity-30 motion-reduce:transform-none motion-reduce:transition-none" @click="previousTrack">
-          <svg viewBox="0 0 24 24" fill="currentColor" class="h-6 w-6" aria-hidden="true">
-            <path d="M6 5h2v14H6V5Zm3.5 7 9-7v14l-9-7Z"/>
-          </svg>
+          <img src="@/assets/icons/skip-back.svg" alt="" width="24" height="24" class="h-6 w-6" aria-hidden="true"/>
         </button>
 
         <button type="button" :aria-label="isPlaying ? 'Pause' : 'Play'" :aria-pressed="isPlaying"
@@ -267,9 +265,7 @@
          class="flex h-12 w-12 cursor-pointer items-center justify-center rounded-full text-text-secondary transition
          hover:bg-primary-light focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary active:scale-90
          disabled:cursor-not-allowed disabled:opacity-30 motion-reduce:transform-none motion-reduce:transition-none" @click="nextTrack">
-          <svg viewBox="0 0 24 24" fill="currentColor" class="h-6 w-6" aria-hidden="true">
-            <path d="M16 5h2v14h-2V5ZM5.5 5l9 7-9 7V5Z"/>
-          </svg>
+          <img src="@/assets/icons/skip-forward.svg" alt="" width="24" height="24" class="h-6 w-6" aria-hidden="true"/>
         </button>
       </div>
     </div>

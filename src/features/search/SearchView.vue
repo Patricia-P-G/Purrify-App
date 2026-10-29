@@ -130,11 +130,6 @@
       </section>
     </section>
 
-    <!-- Action Toast -->
-    <ActionToast :show="showToast" :type="toastType" :action="toastAction"
-      :track-name="toastTrackName" :playlist-name="toastPlaylistName"
-      @close="closeToast"
-    />
   </main>
 </template>
 
@@ -145,11 +140,9 @@ import { useHead } from "@unhead/vue";
 import { searchSpotify, type SearchResults } from "@/services/spotify/api/search";
 import { usePlayer } from "@/composables/usePlayer";
 import { useFavoriteActions } from "@/composables/useFavoritesActions";
-import { useActionToast } from "@/composables/useActionToast";
 
 import TrackList from "@/components/music/TrackList.vue";
 import AlbumSection from "@/components/music/AlbumSection.vue";
-import ActionToast from "@/components/ui/ActionToast.vue";
 
 import type { Track } from "@/types/music";
 
@@ -163,7 +156,6 @@ const { currentTrack, currentIndex, isPlaying, playTracks, togglePlay } = usePla
 const { isFavorite, handleFavoriteClick } = useFavoriteActions();
 
 // Action Toast
-const { showToast, toastType, toastAction, toastTrackName, toastPlaylistName, closeToast } = useActionToast();
 
 // Search Results Returned by Spotify
 const results = ref<SearchResults>({

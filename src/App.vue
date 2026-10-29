@@ -4,6 +4,8 @@ import { useRoute } from "vue-router";
 import AsideNav from "@/components/layout/AsideNav.vue";
 import NavBar from "@/components/layout/NavBar.vue";
 import MusicPlayer from "@/components/music/MusicPlayer.vue";
+import ActionToast from "@/components/ui/ActionToast.vue";
+import { useActionToast } from "@/composables/useActionToast";
 import { onSpotifyTrackEnd } from "@/services/spotify/spotifyPlayer";
 import { usePlayer } from "@/composables/usePlayer";
 import { useScrollToTop } from "@/composables/useScrollToTop";
@@ -15,6 +17,7 @@ const route = useRoute();
 const { nextTrack, currentTrack } = usePlayer();
 const { loadFavorites } = useFavorites();
 const { loadPlaylists } = usePlaylists();
+const { showToast, toastType, toastAction, toastTrackName, toastPlaylistName, closeToast } = useActionToast();
 
 // Pages Without the Main App Layout
 const isAuthPage = computed(() => {
@@ -89,4 +92,10 @@ useScrollToTop();
 
     <MusicPlayer />
   </div>
+
+  <!-- Global Action Toast -->
+  <ActionToast :show="showToast" :type="toastType" :action="toastAction"
+    :track-name="toastTrackName" :playlist-name="toastPlaylistName" @close="closeToast"
+  />
+  
 </template>

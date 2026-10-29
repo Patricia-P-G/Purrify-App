@@ -35,28 +35,13 @@
       @menu-click="toggleMenu" @remove-from-playlist="handleRemoveTrack">
 
       <template #loading>
-        <div v-if="hasMore" ref="loadMoreTrigger"
-          class="flex h-20 items-center justify-center gap-3">
-          <template v-if="isLoadingMore">
-            <div
-              class="h-5 w-5 animate-spin rounded-full border-2 border-primary-light border-t-primary motion-reduce:animate-none"
-              aria-hidden="true"></div>
-
-            <span class="text-sm text-text-secondary" role="status">
-              Loading more songs...
-            </span>
-          </template>
-        </div>
+        <LoadMoreTrigger v-if="hasMore" ref="loadMoreTrigger" :loading="isLoadingMore" />
       </template>
     </TrackList>
 
-    <p class="sr-only" role="status" aria-live="polite" aria-atomic="true">
-      {{ loadingAnnouncement }}
-    </p>
+    <ScreenReaderStatus :message="loadingAnnouncement" />
 
-    <p v-if="playbackMessage" class="sr-only" role="status" aria-live="polite" aria-atomic="true">
-      {{ playbackMessage }}
-    </p>
+    <ScreenReaderStatus :message="playbackMessage" />
 
     <!-- Edit Playlist -->
     <EditPlaylist v-if="showEditPlaylist && localPlaylist" :playlist="localPlaylist"
@@ -105,22 +90,20 @@
   <!-- Delete Playlist -->
   <DeletePlaylist v-if="showDeleteConfirmation && deletingPlaylistId"
     :playlist-id="deletingPlaylistId" :playlist-name="deletingPlaylistName"
-    @close="closeDeletePlaylist" @deleted="handleDeletePlaylist"/>
+    @close="closeDeletePlaylist" @deleted="handleDeletePlaylist"
+  />
 
-  <!-- Action Toast -->
-  <ActionToast :show="showToast" :type="toastType" :action="toastAction"
-    :track-name="toastTrackName" :playlist-name="toastPlaylistName"
-    @close="closeToast"/>
 </template>
 
 <script setup lang="ts">
+import LoadMoreTrigger from "@/components/ui/LoadMoreTrigger.vue";
+import ScreenReaderStatus from "@/components/ui/ScreenReaderStatus.vue";
 import { computed, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { useHead } from "@unhead/vue";
 import MusicHeroLayout from "@/components/music/MusicHeroLayout.vue";
 import TrackList from "@/components/music/TrackList.vue";
 import PlayAllButton from "@/components/ui/PlayAllButton.vue";
-import ActionToast from "@/components/ui/ActionToast.vue";
 import EditPlaylist from "@/features/playlists/components/EditPlaylist.vue";
 import PlaylistOptionsMenu from "@/features/playlists/components/PlaylistOptionsMenu.vue";
 import DeletePlaylist from "./components/DeletePlaylist.vue";
@@ -178,8 +161,7 @@ const {
   visibleTracks, hasMore, loadMoreTrigger, isLoadingMore, loadingAnnouncement, resetList,
   openMenu, toggleMenu, isPlaying, activeTrackId, activeTrackIndex,
   playbackMessage, handleTrackClick, playAll, isFavorite, handleFavoriteClick,
-  showToast, toastType, toastAction, toastTrackName, toastPlaylistName, triggerToast, closeToast,
-} = useTrackListView(
+  triggerToast, } = useTrackListView(
   computed(() => playlist.value?.tracks ?? []),
   {
     label: "playlist songs",

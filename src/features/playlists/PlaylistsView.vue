@@ -107,9 +107,6 @@
     <CreatePlaylist v-if="showCreatePlaylist" @close="showCreatePlaylist = false"/>
 
     <!-- Action Toast -->
-    <ActionToast :show="showToast" :type="toastType" :action="toastAction"
-      :track-name="toastTrackName" :playlist-name="toastPlaylistName"
-      @close="closeToast"/>
   </main>
 </template>
 
@@ -118,26 +115,14 @@ import { onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
 import { useHead } from "@unhead/vue";
 import MusicHeroLayout from "@/components/music/MusicHeroLayout.vue";
-import ActionToast from "@/components/ui/ActionToast.vue";
 import CreatePlaylist from "@/features/playlists/components/CreatePlaylist.vue";
 import { usePlaylists } from "@/composables/usePlaylists";
-import { useActionToast } from "@/composables/useActionToast";
 
 // Router
 const router = useRouter();
 
 // Playlists
 const { playlists, loadPlaylists } = usePlaylists();
-
-// Action Toast
-const {
-  showToast,
-  toastType,
-  toastAction,
-  toastTrackName,
-  toastPlaylistName,
-  closeToast,
-} = useActionToast();
 
 // Modal State
 const showCreatePlaylist = ref(false);

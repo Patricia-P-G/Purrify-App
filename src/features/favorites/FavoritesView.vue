@@ -15,9 +15,7 @@
         <div class="w-[85%] self-center sm:w-80 lg:w-76">
           <SearchBar v-model="searchQuery" />
 
-          <p class="sr-only" role="status" aria-live="polite" aria-atomic="true">
-            {{ searchStatus }}
-          </p>
+          <ScreenReaderStatus :message="searchStatus" />
         </div>
       </template>
     </MusicHeroLayout>
@@ -69,18 +67,13 @@
       </p>
     </section>
 
-    <p v-if="playbackMessage" class="sr-only" role="status" aria-live="polite" aria-atomic="true">
-      {{ playbackMessage }}
-    </p>
+    <ScreenReaderStatus :message="playbackMessage" />
 
-    <!-- Action Toast -->
-    <ActionToast :show="showToast" :type="toastType" :action="toastAction" :track-name="toastTrackName" :playlist-name="toastPlaylistName"
-      @close="closeToast"
-    />
   </main>
 </template>
 
 <script setup lang="ts">
+import ScreenReaderStatus from "@/components/ui/ScreenReaderStatus.vue";
 import { onMounted, ref } from "vue";
 import { useHead } from "@unhead/vue";
 import { useFavorites } from "@/composables/useFavorites";
@@ -89,7 +82,6 @@ import MusicHeroLayout from "@/components/music/MusicHeroLayout.vue";
 import PlayAllButton from "@/components/ui/PlayAllButton.vue";
 import SearchBar from "@/components/ui/SearchBar.vue";
 import TrackList from "@/components/music/TrackList.vue";
-import ActionToast from "@/components/ui/ActionToast.vue";
 
 // Favorites
 const { favoriteTracks, loadFavorites, isLoading } = useFavorites();
@@ -99,8 +91,7 @@ const loadError = ref(false);
 const {
   searchQuery, searchStatus, filteredTracks, openMenu, toggleMenu,
   isPlaying, activeTrackId, activeTrackIndex, playbackMessage, handleTrackClick, playAll,
-  isFavorite, handleFavoriteClick,
-  showToast, toastType, toastAction, toastTrackName, toastPlaylistName, closeToast
+  isFavorite, handleFavoriteClick
 } = useTrackListView(favoriteTracks, {
   label: "favorite songs",
   source: () => ({ type: "favorites" }),
