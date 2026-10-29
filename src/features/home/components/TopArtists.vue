@@ -44,7 +44,7 @@
       <li v-for="artist in topArtists" :key="artist.id">
 
         <!-- Artist Card -->
-        <RouterLink :to="`/artists/${artist.id}`"class="song-card group flex w-full cursor-pointer items-center gap-3 p-2.5 text-left
+        <RouterLink :to="`/artists/${artist.id}`" class="song-card group flex w-full cursor-pointer items-center gap-3 p-2.5 text-left
           focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary
           active:scale-[0.99] motion-reduce:transform-none motion-reduce:transition-none"
           :aria-label="`Open ${artist.name} artist page`">

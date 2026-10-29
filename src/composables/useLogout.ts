@@ -2,6 +2,8 @@ import { ref } from "vue";
 import { useRouter } from "vue-router";
 import { endSession } from "@/services/appwrite/session";
 import { clearSpotifyTokens } from "@/services/spotify/auth";
+import { clearRecommendationsCache } from "@/services/spotify/api/recommendedForYou";
+import { clearMadeForYouCache } from "@/services/spotify/api/madeForYou";
 import { useFavorites } from "@/composables/useFavorites";
 import { usePlaylists } from "@/composables/usePlaylists";
 
@@ -21,6 +23,8 @@ export function useLogout() {
     try {
       await endSession();
       clearSpotifyTokens();
+      clearRecommendationsCache();
+      clearMadeForYouCache();
 
       // Clear local state without deleting any Appwrite data
       resetFavorites();

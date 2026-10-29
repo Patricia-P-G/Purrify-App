@@ -18,10 +18,13 @@ const CACHE_DURATION = 3 * 60 * 60 * 1000;
 const RECOMMENDATION_LIMIT = 4;
 const ARTIST_LIMIT = 20;
 
+// Removes cached recommendations, so the next user doesn't see them
+export function clearRecommendationsCache() {
+  localStorage.removeItem(CACHE_KEY);
+}
 
 // Generates personalized song recommendations based on the user's top artists
 // Refreshes recommendations every 3 hours and avoids previously recommended songs
-
 export async function getRecommendedSongs(): Promise<Track[]> {
   const cached = localStorage.getItem(CACHE_KEY);
   let previousSongs: Track[] = [];

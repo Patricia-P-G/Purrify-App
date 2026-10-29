@@ -15,7 +15,7 @@
 
       <!-- Playlist Name -->
       <p class="mt-2 text-sm leading-6 text-text-muted">
-        "{{ playlistName }}" will be deleted. Are you sure u want to proceed?
+        "{{ playlistName }}" will be deleted. Are you sure you want to proceed?
       </p>
 
       <!-- Error Message -->

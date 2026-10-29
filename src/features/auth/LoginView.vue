@@ -11,7 +11,7 @@
     <div class="relative z-10 flex min-h-screen w-full">
       <!-- Left Side -->
       <section class="relative hidden min-h-screen w-[48%] overflow-hidden lg:block">
-        <img src="@/assets/images/login-picture.webp" alt="" aria-hidden="true"class="absolute inset-0 h-full w-full object-cover"/>
+        <img src="@/assets/images/login-picture.webp" alt="" aria-hidden="true" class="absolute inset-0 h-full w-full object-cover"/>
 
         <!-- Logo and Slogan -->
         <div class="relative z-10 flex flex-col px-12 py-8">

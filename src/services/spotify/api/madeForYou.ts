@@ -59,9 +59,16 @@ const getPlaylistImage = (
   }).url;
 };
 
+const MADE_FOR_YOU_CACHE_KEY = "made_for_you_playlists";
+
+// Removes cached playlists, so the next user doesn't see them
+export function clearMadeForYouCache() {
+  sessionStorage.removeItem(MADE_FOR_YOU_CACHE_KEY);
+}
+
 // Gets Spotify playlists for each mood
 export async function getMadeForYouPlaylists(): Promise<MadeForYouPlaylist[]> {
-  const cached = sessionStorage.getItem("made_for_you_playlists");
+  const cached = sessionStorage.getItem(MADE_FOR_YOU_CACHE_KEY);
 
   // Uses the cache only when all 4 playlists were successfully saved
   if (cached) {
@@ -73,10 +80,10 @@ export async function getMadeForYouPlaylists(): Promise<MadeForYouPlaylist[]> {
       }
 
       // Removes an incomplete cache
-      sessionStorage.removeItem("made_for_you_playlists");
+      sessionStorage.removeItem(MADE_FOR_YOU_CACHE_KEY);
     } catch {
       // Removes invalid cached data
-      sessionStorage.removeItem("made_for_you_playlists");
+      sessionStorage.removeItem(MADE_FOR_YOU_CACHE_KEY);
     }
   }
 
@@ -114,7 +121,7 @@ export async function getMadeForYouPlaylists(): Promise<MadeForYouPlaylist[]> {
 
   // Saves the cache only when all 4 playlists loaded successfully
   if (results.length === moods.length) {
-    sessionStorage.setItem("made_for_you_playlists", JSON.stringify(results));
+    sessionStorage.setItem(MADE_FOR_YOU_CACHE_KEY, JSON.stringify(results));
   }
 
   return results;

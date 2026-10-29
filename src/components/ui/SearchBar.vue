@@ -36,6 +36,7 @@ const emit = defineEmits<{
   "update:modelValue": [value: string];
   submit: [];
   focus: [];
+  clear: [];
 }>();
 
 // Updates the search value in the parent through v-model
@@ -46,6 +47,7 @@ const handleInput = (event: Event) => {
 // Clears the current search value
 const clearSearch = () => {
   emit("update:modelValue", "");
+  emit("clear");
 };
 </script>
 
