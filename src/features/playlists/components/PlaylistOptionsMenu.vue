@@ -1,10 +1,9 @@
 <template>
   <!-- Playlist Options Menu -->
   <div ref="menuContainer" class="relative">
+
     <!-- Playlist Options Button -->
-    <button type="button"
-      class="menu-trigger"
-      :class="open ? 'bg-primary-pale text-primary' : ''"
+    <button type="button" class="menu-trigger" :class="open ? 'bg-primary-pale text-primary' : ''"
       aria-label="Playlist options" aria-haspopup="menu" :aria-controls="open ? 'playlist-options-menu' : undefined" :aria-expanded="open"
       @click="open = !open">
       <img src="@/assets/icons/dots-icon.svg" alt="" aria-hidden="true" class="h-5 w-5"/>
@@ -12,7 +11,7 @@
 
     <!-- Options Menu -->
     <div v-if="open" id="playlist-options-menu" role="menu"
-      class="menu-dropdown left-0"
+      class="menu-dropdown right-0"
       @keydown.esc="open = false">
 
       <!-- Edit Playlist -->
@@ -47,16 +46,19 @@ const emit = defineEmits<{
   delete: [];
 }>();
 
+// Opens Edit Playlist
 const handleEdit = () => {
   open.value = false;
   emit("edit");
 };
 
+// Opens Delete Playlist
 const handleDelete = () => {
   open.value = false;
   emit("delete");
 };
 
+// Closes Menu When Clicking Outside
 const handleClickOutside = (event: MouseEvent) => {
   if (!menuContainer.value?.contains(event.target as Node)) {
     open.value = false;
