@@ -55,7 +55,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted } from "vue";
+import { useHead } from "@unhead/vue";
 import { useRouter } from "vue-router";
 import MusicHeroLayout from "@/components/music/MusicHeroLayout.vue";
 
@@ -159,21 +159,26 @@ const openGenre = (genre: Genre) => {
 };
 
 // Page SEO
-onMounted(() => {
-  document.title = "Discover | Purrify";
-
-  let description = document.querySelector<HTMLMetaElement>(
-    'meta[name="description"]'
-  );
-
-  if (!description) {
-    description = document.createElement("meta");
-    description.name = "description";
-    document.head.appendChild(description);
-  }
-
-  description.content =
-    "Discover new music and explore songs by genre on Purrify.";
+useHead({
+  title: "Discover Music by Genre | Purrify",
+  meta: [
+    {
+      name: "description",
+      content: "Discover new music on Purrify. Explore pop, K-pop, rock, jazz, lo-fi and more genres to find songs you'll love.",
+    },
+    {
+      property: "og:title",
+      content: "Discover Music by Genre | Purrify",
+    },
+    {
+      property: "og:description",
+      content: "Explore music by genre and find your next favorite song on Purrify.",
+    },
+    {
+      property: "og:type",
+      content: "website",
+    },
+  ],
 });
 
 </script>
