@@ -71,10 +71,10 @@
           <!-- Spotify Connection -->
           <div class="mt-12">
             <button type="button" :disabled="isConnecting" :aria-busy="isConnecting" class="flex w-full cursor-pointer items-center 
-             justify-center gap-3 rounded-full bg-[#00CC59] px-5 py-4 text-base font-semibold text-white
+             justify-center gap-3 rounded-full bg-[#006B2D] px-5 py-4 text-base font-semibold text-white
              shadow-[0_10px_30px_rgba(0,204,89,0.22)] transition-all duration-200 hover:bg-[#1DB954]
              hover:shadow-[0_14px_35px_rgba(0,204,89,0.30)] focus-visible:outline-2 focus-visible:outline-offset-4
-             focus-visible:outline-[#00CC59] disabled:cursor-not-allowed disabled:opacity-70 motion-reduce:transition-none"
+             focus-visible:outline-[#006B2D] disabled:cursor-not-allowed disabled:opacity-70 motion-reduce:transition-none"
               @click="handleSpotifyLogin">
 
               <!-- Spotify Icon -->
