@@ -1,23 +1,49 @@
-import { ref, watch, nextTick, onMounted, onBeforeUnmount, type Ref } from "vue";
+
+import {
+  ref,
+  watch,
+  nextTick,
+  onMounted,
+  onBeforeUnmount,
+  type ComponentPublicInstance,
+  type Ref,
+} from "vue";
 
 // Reusable Infinite Scroll
 export function useInfiniteScroll(
   hasMore: Ref<boolean>,
   loadMore: () => Promise<void> | void
 ) {
-  const loadMoreTrigger = ref<HTMLElement | null>(null);
+  const loadMoreTrigger = ref<HTMLElement | ComponentPublicInstance | null>(null);
   const isLoadingMore = ref(false);
   const loadingAnnouncement = ref("");
 
   let observer: IntersectionObserver | null = null;
   let version = 0;
 
+  // Gets the Actual DOM Element
+  const getTriggerElement = (): Element | null => {
+    const trigger = loadMoreTrigger.value;
+
+    if (!trigger) return null;
+
+    if (trigger instanceof HTMLElement) {
+      return trigger;
+    }
+
+    const element = trigger.$el;
+
+    return element instanceof Element ? element : null;
+  };
+
   // Observes the Loading Element
   const observeLoadMore = () => {
     observer?.disconnect();
 
-    if (loadMoreTrigger.value && hasMore.value && !isLoadingMore.value) {
-      observer?.observe(loadMoreTrigger.value);
+    const element = getTriggerElement();
+
+    if (element && hasMore.value && !isLoadingMore.value) {
+      observer?.observe(element);
     }
   };
 

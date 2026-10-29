@@ -54,15 +54,7 @@ const pageDescription =
 
 useHead({
   title: pageTitle,
-
-  // Canonical URL
-  link: [
-    {
-      rel: "canonical",
-      href: "https://your-purrify-domain.com/home",
-    },
-  ],
-
+  
   meta: [
     {
       name: "description",
@@ -85,10 +77,6 @@ useHead({
     {
       property: "og:description",
       content: pageDescription,
-    },
-    {
-      property: "og:url",
-      content: "https://your-purrify-domain.com/home",
     },
   ],
 });
