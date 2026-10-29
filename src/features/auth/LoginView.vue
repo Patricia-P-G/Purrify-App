@@ -120,10 +120,6 @@ useHead({
         "Connect your Spotify account to Purrify to discover music, explore your favorite artists, and enjoy your own cozy music space.",
     },
     {
-      name: "robots",
-      content: "noindex, follow",
-    },
-    {
       property: "og:title",
       content: "Connect with Spotify | Purrify",
     },
