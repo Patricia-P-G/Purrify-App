@@ -34,17 +34,21 @@
         :class="[
           recentHover
             ? 'song-card p-2.5'
-            : 'border-b border-border py-3 transition duration-200 last:rounded-b-[22px] last:border-b-0 sm:last:rounded-b-[28px]',
+            : mobileSpacious
+              ? 'border-b border-border py-4 transition duration-200 last:rounded-b-[22px] last:border-b-0 sm:py-3 sm:last:rounded-b-[28px]'
+              : 'border-b border-border py-3 transition duration-200 last:rounded-b-[22px] last:border-b-0 sm:last:rounded-b-[28px]',
           recentHover
             ? isCurrentTrack(track.id, index) ? 'song-card-active' : ''
             : isCurrentTrack(track.id, index)
               ? 'bg-primary-light shadow-[0_8px_22px_rgba(253,113,121,0.16)]'
               : 'hover:bg-surface-light hover:shadow-[0_8px_24px_rgba(75,75,85,0.10)]',
           openMenu === index ? 'z-50' : 'z-0',
-          recentHover ? '' : embedded ? 'px-6' : 'px-3 sm:px-5 lg:px-6'
+          recentHover ? '' : embedded
+            ? mobileSpacious ? 'px-3 sm:px-6' : 'px-6'
+            : 'px-3 sm:px-5 lg:px-6'
         ]">
 
-        <!-- Number / Play Button -->
+        <!-- Track Number / Play Button -->
         <div class="hidden h-9 w-9 items-center justify-center lg:flex">
 
           <!-- Track Number -->
@@ -59,7 +63,7 @@
             class="cursor-pointer transition duration-200 hover:scale-110 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary
             active:scale-90 motion-reduce:transform-none motion-reduce:transition-none"
             :class="isCurrentTrack(track.id, index) ? 'block' : 'hidden group-hover:block focus-visible:block'"
-            :aria-label="isCurrentTrack(track.id, index) && isPlaying ? `Pause ${track.title} by ${track.artist}` : `Play ${track.title} by ${track.artist}`"
+            :aria-label="playbackLabel(track, index)"
             :aria-pressed="isCurrentTrack(track.id, index) && isPlaying"
             @click="emit('trackClick', track, index)">
 
@@ -71,32 +75,78 @@
         <!-- Track Information -->
         <div class="flex min-w-0 items-center gap-3 sm:gap-4">
 
-          <!-- Album Cover -->
+          <!-- Mobile Album Cover Play Button -->
+          <button type="button"
+            class="relative flex shrink-0 cursor-pointer items-center justify-center rounded-xl
+            focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary lg:hidden"
+            :class="mobileSpacious ? 'h-16 w-16' : 'h-12 w-12 sm:h-14 sm:w-14'"
+            :aria-label="playbackLabel(track, index)"
+            :aria-pressed="isCurrentTrack(track.id, index) && isPlaying"
+            @click="emit('trackClick', track, index)">
+
+            <!-- Album Cover -->
+            <img v-if="track.image" :src="track.image" alt="" loading="lazy" decoding="async" width="64" height="64"
+              class="h-full w-full object-cover transition duration-200 motion-reduce:transition-none"
+              :class="recentHover
+                ? 'rounded-2xl shadow-[0_4px_10px_rgba(75,75,85,0.16)]'
+                : 'rounded-xl shadow-sm'"/>
+
+            <!-- Album Cover Fallback -->
+            <div v-else
+              class="flex h-full w-full items-center justify-center bg-primary-light text-primary"
+              :class="recentHover ? 'rounded-2xl' : 'rounded-xl'"
+              aria-hidden="true">
+              <img src="@/assets/icons/music.svg" alt="" class="h-6 w-6"/>
+            </div>
+
+            <!-- Active Track Play / Pause Indicator -->
+            <span v-if="isCurrentTrack(track.id, index)"
+              class="absolute inset-0 flex items-center justify-center rounded-xl bg-black/35 text-white"
+              aria-hidden="true">
+
+              <img v-if="isPlaying" src="@/assets/icons/vertical-lines.svg" alt="" class="h-6 w-6"/>
+              <img v-else src="@/assets/icons/play-hover-icon.svg" alt="" class="h-6 w-6"/>
+            </span>
+          </button>
+
+          <!-- Desktop Album Cover -->
           <img v-if="track.image" :src="track.image" alt="" loading="lazy" decoding="async" width="56" height="56"
-            class="h-12 w-12 shrink-0 object-cover transition duration-200 motion-reduce:transition-none sm:h-14 sm:w-14"
+            class="hidden h-14 w-14 shrink-0 object-cover transition duration-200 motion-reduce:transition-none lg:block"
             :class="recentHover
               ? 'rounded-2xl shadow-[0_4px_10px_rgba(75,75,85,0.16)] group-hover:shadow-[0_6px_14px_rgba(75,75,85,0.22)]'
-              : 'rounded-lg shadow-sm group-hover:shadow-[0_6px_16px_rgba(75,75,85,0.22)] sm:rounded-xl'"/>
+              : 'rounded-xl shadow-sm group-hover:shadow-[0_6px_16px_rgba(75,75,85,0.22)]'"/>
 
-          <!-- Album Cover Fallback -->
+          <!-- Desktop Album Cover Fallback -->
           <div v-else
-            class="flex h-12 w-12 shrink-0 items-center justify-center bg-primary-light text-primary sm:h-14 sm:w-14"
-            :class="recentHover ? 'rounded-2xl' : 'rounded-lg sm:rounded-xl'"
+            class="hidden h-14 w-14 shrink-0 items-center justify-center bg-primary-light text-primary lg:flex"
+            :class="recentHover ? 'rounded-2xl' : 'rounded-xl'"
             aria-hidden="true">
-            <img src="@/assets/icons/music.svg" alt="" class="h-5 w-5 sm:h-6 sm:w-6"/>
+            <img src="@/assets/icons/music.svg" alt="" class="h-6 w-6"/>
           </div>
 
           <!-- Song Information -->
           <div class="min-w-0 flex-1">
 
             <!-- Song Title -->
-            <h3 class="truncate text-sm font-semibold transition duration-200 motion-reduce:transition-none"
-              :class="isCurrentTrack(track.id, index) ? 'text-primary' : 'text-primary-text'">
-              {{ track.title }}
+            <h3 class="min-w-0">
+              <button type="button"
+                class="block w-full cursor-pointer truncate text-left font-semibold transition duration-200
+                focus-visible:rounded-sm focus-visible:outline-2 focus-visible:outline-offset-2
+                focus-visible:outline-primary motion-reduce:transition-none"
+                :class="[
+                  isCurrentTrack(track.id, index) ? 'text-primary' : 'text-primary-text',
+                  mobileSpacious ? 'text-base sm:text-sm' : 'text-sm'
+                ]"
+                :aria-label="playbackLabel(track, index)"
+                :aria-pressed="isCurrentTrack(track.id, index) && isPlaying"
+                @click="emit('trackClick', track, index)">
+                {{ track.title }}
+              </button>
             </h3>
 
             <!-- Artists -->
-            <p class="mt-0.5 truncate text-xs text-text-secondary">
+            <p class="mt-0.5 truncate text-text-secondary"
+              :class="mobileSpacious ? 'text-sm sm:text-xs' : 'text-xs'">
 
               <!-- Multiple Artists -->
               <template v-if="track.artists?.length">
@@ -187,11 +237,8 @@
 
         <!-- Track Actions -->
         <TrackActionsMenu :track="track" :index="index" :is-open="openMenu === index"
-          :allow-remove="allowRemoveFromPlaylist"
-          @toggle="emit('menuClick', index)"
-          @add-to-playlist="openAddToPlaylist(track, index)"
-          @create-playlist="handleCreatePlaylist(track, index)"
-          @remove="handleRemoveFromPlaylist(track, index)"/>
+          :allow-remove="allowRemoveFromPlaylist" @toggle="emit('menuClick', index)" @add-to-playlist="openAddToPlaylist(track, index)"
+          @create-playlist="handleCreatePlaylist(track, index)" @remove="handleRemoveFromPlaylist(track, index)"/>
       </li>
     </ul>
 
@@ -239,6 +286,7 @@ const props = withDefaults(
     showHeader?: boolean;
     embedded?: boolean;
     recentHover?: boolean;
+    mobileSpacious?: boolean;
     listLabel: string;
     headingId?: string;
     currentTrackId?: string;
@@ -254,6 +302,7 @@ const props = withDefaults(
     showHeader: true,
     embedded: false,
     recentHover: false,
+    mobileSpacious: false,
     allowRemoveFromPlaylist: false,
   },
 );
@@ -266,8 +315,6 @@ const emit = defineEmits<{
   removeFromPlaylist: [track: Track];
 }>();
 
-// Action Toast
-
 // Playlist State
 const selectedTrackForPlaylist = ref<Track | null>(null);
 const selectedTrackForCreatePlaylist = ref<Track | null>(null);
@@ -275,6 +322,13 @@ const selectedTrackForCreatePlaylist = ref<Track | null>(null);
 // Checks Whether a Track Is Selected
 const isCurrentTrack = (trackId: string, index: number) => {
   return props.currentTrackId === trackId && props.currentTrackIndex === index;
+};
+
+// Accessible Playback Label
+const playbackLabel = (track: Track, index: number) => {
+  return isCurrentTrack(track.id, index) && props.isPlaying
+    ? `Pause ${track.title} by ${track.artist}`
+    : `Play ${track.title} by ${track.artist}`;
 };
 
 // Opens Add to Playlist
