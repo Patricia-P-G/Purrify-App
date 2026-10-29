@@ -1,3 +1,4 @@
+
 <template>
   <!-- List of Songs -->
   <section class="overflow-visible"
@@ -34,9 +35,7 @@
         :class="[
           recentHover
             ? 'song-card p-2.5'
-            : mobileSpacious
-              ? 'border-b border-border py-4 transition duration-200 last:rounded-b-[22px] last:border-b-0 sm:py-3 sm:last:rounded-b-[28px]'
-              : 'border-b border-border py-3 transition duration-200 last:rounded-b-[22px] last:border-b-0 sm:last:rounded-b-[28px]',
+            : 'border-b border-border py-3 transition duration-200 last:rounded-b-[22px] last:border-b-0 sm:last:rounded-b-[28px]',
           recentHover
             ? isCurrentTrack(track.id, index) ? 'song-card-active' : ''
             : isCurrentTrack(track.id, index)
@@ -79,7 +78,7 @@
           <button type="button"
             class="relative flex shrink-0 cursor-pointer items-center justify-center rounded-xl
             focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary lg:hidden"
-            :class="mobileSpacious ? 'h-16 w-16' : 'h-12 w-12 sm:h-14 sm:w-14'"
+            :class="mobileSpacious ? 'h-14 w-14' : 'h-12 w-12 sm:h-14 sm:w-14'"
             :aria-label="playbackLabel(track, index)"
             :aria-pressed="isCurrentTrack(track.id, index) && isPlaying"
             @click="emit('trackClick', track, index)">
@@ -101,11 +100,10 @@
 
             <!-- Active Track Play / Pause Indicator -->
             <span v-if="isCurrentTrack(track.id, index)"
-              class="absolute inset-0 flex items-center justify-center rounded-xl bg-black/35 text-white"
+              class="absolute inset-0 flex items-center justify-center rounded-xl bg-black/35"
               aria-hidden="true">
 
-              <img v-if="isPlaying" src="@/assets/icons/vertical-lines.svg" alt="" class="h-6 w-6"/>
-              <img v-else src="@/assets/icons/play-hover-icon.svg" alt="" class="h-6 w-6"/>
+              <PlayButton :active="true" :playing="isPlaying"/>
             </span>
           </button>
 
@@ -145,8 +143,7 @@
             </h3>
 
             <!-- Artists -->
-            <p class="mt-0.5 truncate text-text-secondary"
-              :class="mobileSpacious ? 'text-sm sm:text-xs' : 'text-xs'">
+            <p class="mt-0.5 truncate text-xs text-text-secondary">
 
               <!-- Multiple Artists -->
               <template v-if="track.artists?.length">
@@ -237,8 +234,11 @@
 
         <!-- Track Actions -->
         <TrackActionsMenu :track="track" :index="index" :is-open="openMenu === index"
-          :allow-remove="allowRemoveFromPlaylist" @toggle="emit('menuClick', index)" @add-to-playlist="openAddToPlaylist(track, index)"
-          @create-playlist="handleCreatePlaylist(track, index)" @remove="handleRemoveFromPlaylist(track, index)"/>
+          :allow-remove="allowRemoveFromPlaylist"
+          @toggle="emit('menuClick', index)"
+          @add-to-playlist="openAddToPlaylist(track, index)"
+          @create-playlist="handleCreatePlaylist(track, index)"
+          @remove="handleRemoveFromPlaylist(track, index)"/>
       </li>
     </ul>
 

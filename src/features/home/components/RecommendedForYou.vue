@@ -54,9 +54,10 @@
     <ErrorState v-else-if="errorMessage" :message="errorMessage" @retry="loadRecommendations" />
 
     <!-- Recommended Songs -->
-    <TrackList v-else-if="recommendedSongs.length" :tracks="recommendedSongs" list-label="Recommended songs" heading-id="recommended-track-list-heading"
-      :current-track-id="recommendedTrackId" :current-track-index="recommendedTrackIndex" :is-playing="isPlaying" :open-menu="openMenu" :is-favorite="isFavorite"
-      :show-header="false" embedded @track-click="handleTrackClick" @favorite-click="handleFavoriteClick" @menu-click="toggleMenu"
+    <TrackList v-else-if="recommendedSongs.length" :tracks="recommendedSongs" list-label="Recommended songs"
+      heading-id="recommended-track-list-heading" :current-track-id="recommendedTrackId" :current-track-index="recommendedTrackIndex"
+      :is-playing="isPlaying" :open-menu="openMenu" :is-favorite="isFavorite" :show-header="false" mobile-spacious embedded
+      @track-click="handleTrackClick" @favorite-click="handleFavoriteClick" @menu-click="toggleMenu"
     />
 
     <!-- Empty State -->
