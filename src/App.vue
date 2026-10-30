@@ -11,7 +11,7 @@ import { usePlayer } from "@/composables/usePlayer";
 import { useScrollToTop } from "@/composables/useScrollToTop";
 import { useFavorites } from "@/composables/useFavorites";
 import { usePlaylists } from "@/composables/usePlaylists";
-import { getCurrentUser } from "@/services/appwrite/session";
+import { getCurrentUser, hasSessionHint } from "@/services/appwrite/session";
 
 const route = useRoute();
 const { nextTrack, currentTrack } = usePlayer();
@@ -26,6 +26,9 @@ const isAuthPage = computed(() => {
 
 // Restore Saved Data After Refresh
 const restoreUserData = async () => {
+  // Skip when nobody is logged in on this browser
+  if (!hasSessionHint()) return;
+
   try {
     // Verify Active Appwrite Session
     await getCurrentUser();

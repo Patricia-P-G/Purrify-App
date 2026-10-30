@@ -1,5 +1,5 @@
 import { createRouter, createWebHistory } from "vue-router";
-import { getCurrentUser, isUnauthorized } from "@/services/appwrite/session";
+import { clearSessionHint, getCurrentUser, hasSessionHint, isUnauthorized } from "@/services/appwrite/session";
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -115,6 +115,11 @@ const router = createRouter({
 router.beforeEach(async (to) => {
   if (!to.meta.requiresAuth) return true;
 
+  const loginRedirect = { name: "login", query: { redirect: to.fullPath } };
+
+  // Nobody has logged in on this browser: go to login without asking Appwrite (avoids a 401 in the console)
+  if (!hasSessionHint()) return loginRedirect;
+
   try {
     // Verify Active Appwrite Session
     await getCurrentUser();
@@ -122,10 +127,8 @@ router.beforeEach(async (to) => {
   } catch (error: unknown) {
     // Redirect Only When the Session Is Invalid
     if (isUnauthorized(error)) {
-      return {
-        name: "login",
-        query: { redirect: to.fullPath },
-      };
+      clearSessionHint();
+      return loginRedirect;
     }
 
     // Keep the Current Page on Network or Server Errors
