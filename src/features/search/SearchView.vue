@@ -1,8 +1,7 @@
 <template>
   <main class="w-full" aria-labelledby="search-results-heading">
     <!-- No Search Yet -->
-    <section v-if="!searchQuery"
-      class="rounded-[28px] border border-border bg-surface p-8 shadow-[0_14px_42px_rgba(75,75,85,0.18)]">
+    <section v-if="!searchQuery" class="rounded-[28px] border border-border bg-surface p-8 shadow-[0_14px_42px_rgba(75,75,85,0.18)]">
       <h1 id="search-results-heading" class="text-2xl font-semibold text-primary-text">
         Search Purrify
       </h1>
@@ -70,13 +69,7 @@
 
       <!-- Albums -->
       <section class="border-t border-border px-6 py-6 sm:px-8">
-        <AlbumSection
-          :albums="searchAlbums"
-          title="Albums"
-          heading-id="search-albums-heading"
-          variant="search"
-          unstyled
-        />
+        <AlbumSection :albums="searchAlbums" title="Albums" heading-id="search-albums-heading" variant="search" unstyled />
       </section>
 
       <!-- Artists -->

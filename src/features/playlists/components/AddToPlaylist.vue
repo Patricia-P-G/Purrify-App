@@ -1,7 +1,6 @@
 <template>
   <!-- Backdrop -->
-  <div class="fixed inset-0 z-200 flex items-center justify-center bg-black/30 px-3 py-4 sm:px-4 sm:py-6"
-    @click.self="closeModal">
+  <div class="fixed inset-0 z-200 flex items-center justify-center bg-black/30 px-3 py-4 sm:px-4 sm:py-6" @click.self="closeModal">
 
     <!-- Modal -->
     <section class="max-h-[calc(100dvh-2rem)] w-full max-w-120 overflow-y-auto rounded-[22px] bg-surface p-4 shadow-[0_24px_70px_rgba(75,75,85,0.22)] sm:max-h-[calc(100dvh-3rem)] sm:rounded-[28px] sm:p-6"

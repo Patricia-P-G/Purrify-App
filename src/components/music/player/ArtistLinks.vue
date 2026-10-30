@@ -23,4 +23,5 @@ defineProps<{
 const emit = defineEmits<{
   navigate: [];
 }>();
+
 </script>

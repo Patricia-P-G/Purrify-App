@@ -1,4 +1,3 @@
-
 <template>
   <header class="sticky top-0 z-30 flex min-h-20 w-full items-center gap-3 border-b border-border-pink bg-background px-4
     sm:gap-4 sm:px-6 lg:pl-8 lg:pr-16">

@@ -1,7 +1,6 @@
 <template>
   <!-- Made for You Section -->
-  <section class="section-card"
-    aria-labelledby="made-for-you-heading" :aria-busy="isLoading">
+  <section class="section-card" aria-labelledby="made-for-you-heading" :aria-busy="isLoading">
 
     <!-- Header -->
     <div class="section-card-header">

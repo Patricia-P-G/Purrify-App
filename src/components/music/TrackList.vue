@@ -1,8 +1,6 @@
-
 <template>
   <!-- List of Songs -->
-  <section class="overflow-visible"
-    :class="embedded ? '' : 'rounded-[22px] border border-border bg-surface shadow-[0_14px_40px_rgba(75,75,85,0.12)] sm:rounded-[28px]'"
+  <section class="overflow-visible" :class="embedded ? '' : 'rounded-[22px] border border-border bg-surface shadow-[0_14px_40px_rgba(75,75,85,0.12)] sm:rounded-[28px]'"
     :aria-labelledby="headingId">
 
     <h2 :id="headingId" class="sr-only">
@@ -67,7 +65,8 @@
             @click="emit('trackClick', track, index)">
 
             <PlayButton :active="isCurrentTrack(track.id, index)"
-              :playing="isCurrentTrack(track.id, index) && isPlaying"/>
+              :playing="isCurrentTrack(track.id, index) && isPlaying"
+            />
           </button>
         </div>
 
@@ -91,16 +90,13 @@
                 : 'rounded-xl shadow-sm'"/>
 
             <!-- Album Cover Fallback -->
-            <div v-else
-              class="flex h-full w-full items-center justify-center bg-primary-light text-primary"
-              :class="recentHover ? 'rounded-2xl' : 'rounded-xl'"
-              aria-hidden="true">
+            <div v-else class="flex h-full w-full items-center justify-center bg-primary-light text-primary"
+              :class="recentHover ? 'rounded-2xl' : 'rounded-xl'" aria-hidden="true">
               <img src="@/assets/icons/music.svg" alt="" class="h-6 w-6"/>
             </div>
 
             <!-- Active Track Play / Pause Indicator -->
-            <span v-if="isCurrentTrack(track.id, index)"
-              class="absolute inset-0 flex items-center justify-center rounded-xl bg-black/35"
+            <span v-if="isCurrentTrack(track.id, index)" class="absolute inset-0 flex items-center justify-center rounded-xl bg-black/35"
               aria-hidden="true">
 
               <PlayButton :active="true" :playing="isPlaying"/>
@@ -115,8 +111,7 @@
               : 'rounded-xl shadow-sm group-hover:shadow-[0_6px_16px_rgba(75,75,85,0.22)]'"/>
 
           <!-- Desktop Album Cover Fallback -->
-          <div v-else
-            class="hidden h-14 w-14 shrink-0 items-center justify-center bg-primary-light text-primary lg:flex"
+          <div v-else class="hidden h-14 w-14 shrink-0 items-center justify-center bg-primary-light text-primary lg:flex"
             :class="recentHover ? 'rounded-2xl' : 'rounded-xl'"
             aria-hidden="true">
             <img src="@/assets/icons/music.svg" alt="" class="h-6 w-6"/>

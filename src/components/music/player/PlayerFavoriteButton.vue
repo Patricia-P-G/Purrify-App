@@ -34,4 +34,5 @@ const sizeClasses = {
   md: { button: "h-10 w-10 active:scale-95", icon: "h-5 w-5", iconSize: 20 },
   lg: { button: "h-11 w-11 active:scale-90", icon: "h-6 w-6", iconSize: 24 },
 };
+
 </script>

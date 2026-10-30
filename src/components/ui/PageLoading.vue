@@ -17,4 +17,5 @@
 defineProps<{
   message: string;
 }>();
+
 </script>

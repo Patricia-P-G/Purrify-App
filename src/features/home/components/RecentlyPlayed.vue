@@ -1,7 +1,6 @@
 <template>
   <!-- Recently Played Section -->
-  <section class="section-card"
-    aria-labelledby="recently-played-heading" :aria-busy="isLoading">
+  <section class="section-card" aria-labelledby="recently-played-heading" :aria-busy="isLoading">
 
     <!-- Header -->
     <div class="section-card-header">

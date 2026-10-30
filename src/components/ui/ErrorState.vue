@@ -1,10 +1,8 @@
 <template>
-  <!-- Banner: red box above a list. Section: centered message inside a card. -->
-  <div
-    v-if="variant === 'banner'"
-    class="mb-6 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-center text-sm text-red-700"
-    role="alert"
-  >
+  <!-- Banner: red box above a list. Section: centered message inside a card -->
+  <div v-if="variant === 'banner'" class="mb-6 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-center text-sm text-red-700"
+    role="alert">
+
     <p>{{ message }}</p>
 
     <button v-if="retryable" type="button" class="btn-base btn-sm mt-3 border border-primary bg-primary-pale text-primary hover:bg-primary-light"
@@ -36,4 +34,5 @@ withDefaults(
 const emit = defineEmits<{
   retry: [];
 }>();
+
 </script>

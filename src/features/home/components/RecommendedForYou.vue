@@ -1,7 +1,6 @@
 <template>
   <!-- Recommended for You Section -->
-  <section class="section-card"
-    aria-labelledby="recommended-heading" :aria-busy="isLoading">
+  <section class="section-card" aria-labelledby="recommended-heading" :aria-busy="isLoading">
 
     <!-- Header -->
     <div class="section-card-header">

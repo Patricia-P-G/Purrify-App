@@ -97,4 +97,5 @@ const emit = defineEmits<{
 
 const { isPlaying, hasMultipleTracks, togglePlay, nextTrack, previousTrack } = usePlayer();
 const { formattedPosition, formattedDuration } = usePlayerProgress();
+
 </script>

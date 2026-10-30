@@ -20,4 +20,5 @@ const { currentTrack } = usePlayer();
 const isMobilePlayerOpen = ref(false);
 
 const artists = computed(() => (currentTrack.value ? getTrackArtists(currentTrack.value) : []));
+
 </script>

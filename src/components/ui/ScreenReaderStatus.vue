@@ -9,4 +9,5 @@
 defineProps<{
   message: string;
 }>();
+
 </script>

@@ -3,9 +3,7 @@
         <!-- Dots Menu Button -->
         <button ref="menuButton" type="button" :id="`track-menu-button-${index}`" :aria-label="`More options for ${track.title}`" :aria-expanded="isOpen"
          :aria-controls="isOpen ? `track-menu-${index}` : undefined" aria-haspopup="menu"
-         class="menu-trigger"
-         :class="isOpen ? 'bg-primary-pale text-primary' : ''"
-         @click.stop="emit('toggle')">
+         class="menu-trigger" :class="isOpen ? 'bg-primary-pale text-primary' : ''" @click.stop="emit('toggle')">
 
          <!-- Dots Icon -->
          <img src="@/assets/icons/dots-icon.svg" alt="" aria-hidden="true" class="h-5 w-5"/>
@@ -13,13 +11,10 @@
 
         <!-- Dots Menu Container -->
         <div v-if="isOpen" :id="`track-menu-${index}`" role="menu" :aria-labelledby="`track-menu-button-${index}`"
-         class="menu-dropdown right-0"
-         :class="openUpwards ? 'bottom-11' : 'top-11'"
-         @click.stop @keydown.esc="emit('toggle')">
+         class="menu-dropdown right-0" :class="openUpwards ? 'bottom-11' : 'top-11'" @click.stop @keydown.esc="emit('toggle')">
 
             <!-- Add to Playlist -->
-            <button type="button" role="menuitem" class="menu-item"
-             @click.stop="emit('addToPlaylist')">
+            <button type="button" role="menuitem" class="menu-item" @click.stop="emit('addToPlaylist')">
 
                 <span class="menu-icon" aria-hidden="true">
                     <img src="@/assets/icons/add-playlist.svg" class="h-4 w-4" alt=""/>
@@ -29,8 +24,7 @@
             </button>
 
             <!-- Create Playlist -->
-            <button type="button" role="menuitem" class="menu-item mt-1"
-             @click.stop="emit('createPlaylist')">
+            <button type="button" role="menuitem" class="menu-item mt-1" @click.stop="emit('createPlaylist')">
 
                 <span class="menu-icon" aria-hidden="true">
                     <img src="@/assets/icons/create-playlist.svg" class="h-4 w-4" alt=""/>
@@ -40,8 +34,7 @@
             </button>
 
             <!-- Remove from Playlist -->
-            <button v-if="allowRemove" type="button" role="menuitem" class="menu-item menu-item-danger mt-1"
-             @click.stop="emit('remove')">
+            <button v-if="allowRemove" type="button" role="menuitem" class="menu-item menu-item-danger mt-1" @click.stop="emit('remove')">
 
                 <span class="menu-icon" aria-hidden="true">
                     <img src="@/assets/icons/remove-song.svg" alt="" class="h-4 w-4"/>

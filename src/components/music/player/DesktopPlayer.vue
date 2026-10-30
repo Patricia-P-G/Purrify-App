@@ -88,5 +88,6 @@ defineProps<{
 
 const { isPlaying, hasMultipleTracks, togglePlay, nextTrack, previousTrack, closePlayer } = usePlayer();
 const { formattedPosition, formattedDuration } = usePlayerProgress();
+
 </script>
 

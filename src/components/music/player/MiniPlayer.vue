@@ -1,7 +1,6 @@
 <template>
   <section class="fixed bottom-16 left-0 right-0 z-40 border-t border-primary-light bg-background/95 px-3 py-2.5
-   shadow-[0_-8px_30px_rgba(75,75,85,0.12)] backdrop-blur-md md:bottom-0 md:left-24 md:px-5 lg:hidden"
-   aria-label="Music player">
+   shadow-[0_-8px_30px_rgba(75,75,85,0.12)] backdrop-blur-md md:bottom-0 md:left-24 md:px-5 lg:hidden" aria-label="Music player">
     <div class="flex min-w-0 items-end gap-3">
       <div class="flex min-w-0 flex-1 items-center gap-3">
         <button type="button" class="shrink-0 cursor-pointer rounded-xl focus-visible:outline-2 focus-visible:outline-primary"
@@ -55,4 +54,5 @@ const emit = defineEmits<{
 
 const { isPlaying, togglePlay } = usePlayer();
 const { progressPercentage } = usePlayerProgress();
+
 </script>

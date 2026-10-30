@@ -146,4 +146,5 @@ const emits = defineEmits<{
 const isCurrentTrack = (track: Track) => {
     return props.currentTrackId === track.id;
 };
+
 </script>
