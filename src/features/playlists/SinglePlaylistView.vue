@@ -50,22 +50,13 @@
 
   <!-- Loading Playlist -->
   <main v-else-if="isLoadingPlaylist" class="px-4 py-5 sm:px-6 sm:py-8">
-    <div class="flex min-h-125 items-center justify-center rounded-4xl bg-white px-4">
-      <div class="text-center" role="status" aria-live="polite">
-        <div
-          class="mx-auto h-10 w-10 animate-spin rounded-full border-4 border-primary-light border-t-primary"
-          aria-hidden="true"></div>
-
-        <p class="mt-4 text-sm text-text-muted">
-          Loading playlist...
-        </p>
-      </div>
-    </div>
+    <PageLoading message="Loading playlist..."/>
   </main>
 
   <!-- Playlist Not Found -->
   <main v-else class="px-4 py-5 sm:px-6 sm:py-8">
-    <div class="flex min-h-125 items-center justify-center rounded-4xl bg-white px-6 py-12">
+    <div class="flex min-h-125 items-center justify-center rounded-[22px] border border-border bg-surface px-6 py-12
+     shadow-[0_14px_40px_rgba(75,75,85,0.12)] sm:rounded-[28px]">
       <div class="text-center">
         <div class="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-primary-light"
           aria-hidden="true">
@@ -97,6 +88,7 @@
 
 <script setup lang="ts">
 import LoadMoreTrigger from "@/components/ui/LoadMoreTrigger.vue";
+import PageLoading from "@/components/ui/PageLoading.vue";
 import ScreenReaderStatus from "@/components/ui/ScreenReaderStatus.vue";
 import { computed, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";

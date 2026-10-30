@@ -3,16 +3,7 @@
   <main class="px-4 py-5 sm:px-6 sm:py-8" aria-labelledby="artist-heading">
 
     <!-- Loading Artist -->
-    <div v-if="isLoading" class="flex min-h-125 items-center justify-center" role="status">
-      <div class="text-center">
-        <div class="mx-auto h-10 w-10 animate-spin rounded-full border-4 border-primary-light border-t-primary"
-          aria-hidden="true"></div>
-
-        <p class="mt-4 text-sm text-text-secondary">
-          Loading artist...
-        </p>
-      </div>
-    </div>
+    <PageLoading v-if="isLoading" message="Loading artist..."/>
 
     <template v-else-if="artist">
       <!-- Artist Hero -->
@@ -94,7 +85,8 @@
     </template>
 
     <!-- Artist Not Found -->
-    <div v-else class="flex min-h-125 items-center justify-center">
+    <div v-else class="flex min-h-125 items-center justify-center rounded-[22px] border border-border bg-surface px-6 py-12
+     shadow-[0_14px_40px_rgba(75,75,85,0.12)] sm:rounded-[28px]">
       <div class="text-center">
         <h1 id="artist-heading" class="text-xl font-semibold text-primary-text">
           Artist not found
@@ -115,6 +107,7 @@ import { useRoute } from "vue-router";
 import { useHead } from "@unhead/vue";
 import TrackList from "@/components/music/TrackList.vue";
 import AlbumSection from "@/components/music/AlbumSection.vue";
+import PageLoading from "@/components/ui/PageLoading.vue";
 import { usePlayer } from "@/composables/usePlayer";
 import { useFavoriteActions } from "@/composables/useFavoritesActions";
 import { getArtist, getArtistTopTracks, getArtistAlbums, type ArtistDetails, type ArtistAlbum } from "@/services/spotify/api/artist";
